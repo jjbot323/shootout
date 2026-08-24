@@ -298,6 +298,10 @@ table{border-collapse:collapse; width:100%}
   font-size:16px; color:var(--ink-3); line-height:34px; text-align:center;
 }
 .wv[data-sel="1"]{color:var(--ink); font-size:22px; font-weight:700}
+/* parked on par but not yet chosen: greyed and lighter, so it never passes for
+   a score the player did not make */
+.wheel[data-untouched="1"] .wv[data-sel="1"]{color:var(--ink-3); font-size:19px; font-weight:600}
+.wheelwrap:has(.wheel[data-untouched="1"]){border-style:dashed}
 .wv.bird[data-sel="1"]{color:var(--red)}
 .wheelband{
   position:absolute; left:0; right:0; top:34px; height:34px; pointer-events:none;
@@ -1450,6 +1454,9 @@ function renderDraw(){
 
 /* ---------- hole-by-hole scoring ---------- */
 var ITEM=34, WMIN=1, WMAX=14;
+/* A fresh wheel parks on par so you scroll a stroke or two instead of five or
+   six. It is NOT a score until touched — see data-untouched. */
+function parIdx(){ return Math.max(1,Math.min(WMAX-WMIN+1,PAR[curHole]-WMIN+1)); }
 var sheetOpen=false, sheetReturn=null, sheetSolo=null;
 var group=(function(){
   var v=null;
@@ -1514,7 +1521,9 @@ function wheelFor(p){
   wrap.appendChild(w);
 
   var cur=state.gross[p.id][curHole];
-  var idx=cur===null?0:(cur-WMIN+1);
+  var untouched=cur===null;
+  var idx=untouched?parIdx():(cur-WMIN+1);
+  w.setAttribute("data-untouched",untouched?"1":"0");
   w._idx=idx;
   paintWheel(w,idx);
 
@@ -1551,6 +1560,7 @@ function paintWheel(w,idx){
 }
 function setWheel(w,idx,scrollThere){
   var pid=w.getAttribute("data-pid");
+  w.setAttribute("data-untouched","0");   /* the golfer has now chosen this */
   var v=idx===0?null:(idx-1+WMIN);
   w._idx=idx;
   if(scrollThere){
@@ -1584,26 +1594,44 @@ function updatePlayMeta(pid){
 /* Park every wheel on its saved value. Must run while the panel is actually
    visible — setting scrollTop on a display:none element silently does nothing,
    which left the wheels reading blank when the tab opened. */
-function syncWheels(){
+function syncWheels(attempt){
   var box=byId("playRows");
   if(!box||!box.offsetParent) return false;
+  attempt=attempt||0;
+  void box.offsetHeight;          /* force layout: a freshly built scroller has
+                                     no scrollable overflow yet, and assigning
+                                     scrollTop in that frame clamps to 0 */
+  var settled=true;
   Array.prototype.forEach.call(box.querySelectorAll(".wheel"),function(w){
     var pid=w.getAttribute("data-pid");
     var v=state.gross[pid][curHole];
-    var idx=v===null?0:(v-WMIN+1);
+    var untouched=v===null;
+    var idx=untouched?parIdx():(v-WMIN+1);
+    var want=idx*ITEM;
+    w.setAttribute("data-untouched",untouched?"1":"0");
     w._idx=idx;
     w._sync=true;
-    w.scrollTop=idx*ITEM;
-    setTimeout(function(){ w._sync=false; },140);
+    w.scrollTop=want;
+    if(Math.abs(w.scrollTop-want)>1) settled=false;
+    setTimeout(function(){ w._sync=false; },160);
     paintWheel(w,idx);
   });
-  return true;
+  /* the band and the highlighted number must never disagree */
+  if(!settled&&attempt<6) setTimeout(function(){ syncWheels(attempt+1); },attempt?40:0);
+  return settled;
 }
 function scheduleWheelSync(){
   if(!sheetOpen) return;
-  requestAnimationFrame(function(){ syncWheels(); });
+  requestAnimationFrame(function(){
+    if(!syncWheels(0)) setTimeout(function(){ syncWheels(1); },0);
+  });
 }
 
+var builtSig=null;
+function rowsSig(){
+  var g=groupIds();
+  return (sheetSolo?("solo:"+sheetSolo):("m:"+group))+"|"+g.ids.join(",");
+}
 function renderHole(rebuild){
   if(!sheetOpen) return;
   var g=groupIds();
@@ -1616,7 +1644,11 @@ function renderHole(rebuild){
   byId("hNext").disabled=curHole===17;
   renderHoleStrip();
 
-  if(rebuild){
+  /* The wheels hold the same 1-14 for every hole, so they are only rebuilt when
+     the player set changes. Rebuilding each hole re-ran the layout race that
+     left the band and the highlighted number disagreeing. */
+  var sig=rowsSig();
+  if(rebuild&&sig!==builtSig){
     var rows=byId("playRows");
     rows.textContent="";
     if(!g.ids.length){
@@ -1635,7 +1667,12 @@ function renderHole(rebuild){
       rows.appendChild(r);
       updatePlayMeta(id);
     });
+    builtSig=sig;
     scheduleWheelSync();
+  }else{
+    /* layout is already settled, so the position takes immediately */
+    syncWheels(0);
+    g.ids.forEach(updatePlayMeta);
   }
   refreshHoleMeta();
 }
@@ -1676,7 +1713,7 @@ function refreshHoleMeta(){
     c.appendChild(el("b",null,String(n)));
     c.appendChild(document.createTextNode(" unsaved"));
   }else{
-    c.textContent="Scroll a wheel to set a score.";
+    c.textContent="Scroll or tap each wheel to set a score.";
   }
   byId("holeDiscard").disabled=!n||saving;
   var nx=byId("holeNext");

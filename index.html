@@ -1,0 +1,2041 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover">
+<title>Sixteen Man Shootout</title>
+<meta name="description" content="Live net better-ball scoring for a 16-player one-round match.">
+<meta name="theme-color" content="#0E211C">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Ctext y=%2726%27 font-size=%2726%27%3E%E2%9B%B3%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --paper:#F1F4F0; --card:#FFFFFF; --card-2:#F7F9F6;
+  --ink:#0F201B; --ink-2:#4A5A51; --ink-3:#7E8D84;
+  --line:#D6DDD4; --line-2:#E7EBE5;
+  --navy:#14507A; --navy-ink:#0E3A59; --navy-soft:#E1EDF5;
+  --gold:#8A5A05; --gold-ink:#6B4604; --gold-soft:#F7EBD2;
+  --red:#B33228; --good:#2C6E49; --dirty:#8A5A05; --dirty-bg:#FDF6E6;
+  --board:#0E211C; --board-ink:#EDF3ED; --board-line:#26403A; --board-dim:#8FA69C;
+  --focus:#2E86C1;
+  --mono:ui-monospace,"SFMono-Regular","SF Mono","Cascadia Mono","Segoe UI Mono",Menlo,Consolas,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0B1310; --card:#141F1B; --card-2:#1A2622;
+    --ink:#E9EFE9; --ink-2:#A2B1A7; --ink-3:#78877E;
+    --line:#25322D; --line-2:#1E2A26;
+    --navy:#6DB2DD; --navy-ink:#A7D3EC; --navy-soft:#122F3E;
+    --gold:#E2AC4A; --gold-ink:#F0C778; --gold-soft:#33270E;
+    --red:#E97A70; --good:#5FB98A; --dirty:#E2AC4A; --dirty-bg:#2A2110;
+    --board:#060D0B; --board-ink:#EDF3ED; --board-line:#1D302B; --board-dim:#8B9E95;
+    --focus:#6DB2DD;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0B1310; --card:#141F1B; --card-2:#1A2622;
+  --ink:#E9EFE9; --ink-2:#A2B1A7; --ink-3:#78877E;
+  --line:#25322D; --line-2:#1E2A26;
+  --navy:#6DB2DD; --navy-ink:#A7D3EC; --navy-soft:#122F3E;
+  --gold:#E2AC4A; --gold-ink:#F0C778; --gold-soft:#33270E;
+  --red:#E97A70; --good:#5FB98A; --dirty:#E2AC4A; --dirty-bg:#2A2110;
+  --board:#060D0B; --board-ink:#EDF3ED; --board-line:#1D302B; --board-dim:#8B9E95;
+  --focus:#6DB2DD;
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); font-size:16px; line-height:1.5; -webkit-text-size-adjust:100%; -webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid var(--focus); outline-offset:1px}
+button{font:inherit; color:inherit; cursor:pointer}
+h1,h2,h3{text-wrap:balance; margin:0}
+p{margin:0}
+
+.board{position:sticky; top:0; z-index:30; background:var(--board); color:var(--board-ink); border-bottom:1px solid var(--board-line)}
+.board-in{max-width:1100px; margin:0 auto; padding:12px 16px 0}
+.board-top{display:flex; align-items:baseline; justify-content:space-between; gap:12px; font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--board-dim)}
+.board-score{display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:10px; padding:6px 0 12px}
+.side{display:flex; flex-direction:column; gap:2px}
+.side.r{align-items:flex-end; text-align:right}
+.side-name{font-size:11px; letter-spacing:.14em; text-transform:uppercase; font-weight:700}
+.side.n .side-name{color:#7FC0E8}
+.side.g .side-name{color:#EFC170}
+.side-pts{font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:clamp(36px,12vw,54px); line-height:.9; font-weight:600; letter-spacing:-.03em}
+.board-mid{font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--board-dim); text-align:center; line-height:1.35}
+.board-mid b{display:block; font-family:var(--mono); font-size:15px; color:var(--board-ink); font-weight:600}
+.lead-note{border-top:1px solid var(--board-line); padding:8px 0 10px; font-size:12.5px; color:var(--board-dim); text-align:center}
+.lead-note strong{color:var(--board-ink); font-weight:600}
+
+.tabs{
+  position:sticky; top:0; z-index:29; background:var(--card); border-bottom:1px solid var(--line);
+  overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;
+}
+.tabs::-webkit-scrollbar{display:none}
+.tabs-in{display:flex; max-width:1100px; margin:0 auto; padding:0 6px}
+.tab{background:none; border:0; padding:15px 15px 13px; white-space:nowrap; font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); border-bottom:2px solid transparent}
+.tab[aria-selected="true"]{color:var(--ink); border-bottom-color:var(--ink)}
+@media (max-width:430px){
+  .tab{padding:14px 9px 12px; font-size:11px; letter-spacing:.04em}
+  .tabs-in{padding:0 4px}
+}
+.tab .flag{display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--red); margin-left:6px; vertical-align:2px}
+/* a class-based display beats the UA [hidden] rule — restate it for anything styled here */
+.tab .flag[hidden],.panel[hidden],.card[hidden],[hidden]{display:none}
+
+main{max-width:1100px; margin:0 auto; padding:16px 16px 20px; display:grid; gap:16px}
+.panel{display:grid; gap:16px}
+.card{background:var(--card); border:1px solid var(--line); border-radius:6px; overflow:hidden}
+.card-h{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:11px 14px; border-bottom:1px solid var(--line-2); background:var(--card-2)}
+.card-h h2{font-size:11px; letter-spacing:.14em; text-transform:uppercase; font-weight:700; color:var(--ink-2)}
+.card-b{padding:14px}
+.card-b.flush{padding:0}
+.tag{font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); font-family:var(--mono)}
+.tag.bad{color:var(--red)}
+table{border-collapse:collapse; width:100%}
+.scroller{overflow-x:auto; -webkit-overflow-scrolling:touch}
+
+/* ---------- point ledger ---------- */
+.ledger td{padding:9px 12px; border-bottom:1px solid var(--line-2); text-align:left; font-size:14px}
+.ledger tbody tr:last-child td{border-bottom:0}
+.ledger .pt{width:54px; text-align:center; font-family:var(--mono); font-variant-numeric:tabular-nums; font-weight:600; font-size:15px}
+.ledger .pt.n{color:var(--navy)}
+.ledger .pt.g{color:var(--gold)}
+.ledger .pt.z{color:var(--ink-3); font-weight:400}
+.ledger .lbl{font-size:13.5px}
+.ledger .sub{display:block; font-size:11.5px; color:var(--ink-3); margin-top:2px}
+.ledger tfoot td{border-top:2px solid var(--line); background:var(--card-2); font-weight:700; font-size:11px; letter-spacing:.1em; text-transform:uppercase}
+.ledger tfoot .pt{font-size:17px}
+.pend{display:inline-block; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); border:1px solid var(--line); border-radius:3px; padding:1px 5px; margin-left:6px; vertical-align:1px; font-family:var(--sans)}
+
+/* ---------- individual board ---------- */
+.ind th{padding:8px 10px; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); text-align:right; border-bottom:1px solid var(--line); background:var(--card-2); white-space:nowrap}
+.ind th:first-child{text-align:left}
+.ind td{padding:9px 10px; border-bottom:1px solid var(--line-2); text-align:right; font-size:14px}
+.ind td:first-child{text-align:left}
+.ind tbody tr:last-child td{border-bottom:0}
+.ind .rk{width:32px; color:var(--ink-3); font-family:var(--mono); font-size:12px}
+.ind .who{font-weight:600; white-space:nowrap}
+.swatch{display:inline-block; width:7px; height:7px; border-radius:2px; margin-right:7px; vertical-align:1px; background:var(--ink-3)}
+.swatch.n{background:var(--navy)}
+.swatch.g{background:var(--gold)}
+.ind .v{font-family:var(--mono); font-variant-numeric:tabular-nums}
+.ind .v.big{font-weight:600; font-size:15px}
+.under{color:var(--red); font-weight:600}
+.dim{color:var(--ink-3)}
+
+/* ---------- the scorecard grid ---------- */
+.teewrap{overflow:auto; -webkit-overflow-scrolling:touch; max-height:min(74vh,660px); position:relative}
+.tee{border-collapse:separate; border-spacing:0; width:auto; min-width:100%; font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:12px}
+.tee th,.tee td{border-bottom:1px solid var(--line-2); border-right:1px solid var(--line-2); padding:0; text-align:center; background:var(--card)}
+.tee .fx{position:sticky; z-index:2}
+.tee .c1{left:0; min-width:136px; width:136px; text-align:left; font-family:var(--sans); border-right:1px solid var(--line)}
+.tee .c2{left:136px; min-width:48px; width:48px; border-right:2px solid var(--line)}
+.tee thead th{position:sticky; top:0; z-index:3; background:var(--card-2); color:var(--ink-3); font-weight:600; font-size:11px; height:28px; min-width:38px}
+.tee thead th.fx{z-index:4}
+.tee thead tr.parrow th,.tee thead tr.parrow td{position:sticky; top:28px; z-index:3; background:var(--card-2); color:var(--ink-3); font-size:11px; height:24px}
+.tee thead tr.parrow th.fx{z-index:4}
+.tee .grp th,.tee .grp td{background:var(--card-2); height:30px; text-align:left; border-bottom:1px solid var(--line)}
+.tee .grp th{position:sticky; left:0; z-index:3; font-family:var(--sans); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; font-weight:700; color:var(--ink-2); padding-left:12px}
+.tee .grp td{font-family:var(--sans); font-size:11.5px; color:var(--ink-3); padding-left:12px}
+.tee .pcell{padding:5px 10px 5px 12px; line-height:1.25}
+.tee .pcell b{display:block; font-size:12.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.tee .pcell span{font-size:10.5px; color:var(--ink-3); font-family:var(--mono)}
+.tee tr.n .c1{box-shadow:inset 3px 0 0 var(--navy)}
+.tee tr.g .c1{box-shadow:inset 3px 0 0 var(--gold)}
+.tee .topar{font-weight:700; font-size:13px; color:var(--ink-2)}
+.tee .topar.under{color:var(--red)}
+.tee .topar.none{color:var(--ink-3); font-weight:400}
+.tee .tot{background:var(--card-2); font-weight:600; min-width:42px}
+.tee td.hole{padding:0; position:relative; height:38px; min-width:38px}
+.tee td.hole.strk::before{content:""; position:absolute; top:3px; right:3px; width:4px; height:4px; border-radius:50%; background:var(--red); opacity:.85; pointer-events:none}
+.tee .s{
+  width:100%; height:38px; border:1.5px solid transparent; border-radius:3px; background:none;
+  color:var(--ink); font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:16px;
+  text-align:center; padding:0; -moz-appearance:textfield; appearance:textfield;
+}
+.tee .s{cursor:pointer; font-weight:500}
+.tee .s:hover{background:var(--card-2)}
+/* Only the scores worth spotting get a mark: birdies and blow-ups. Marking every
+   bogey turns a card full of mid-handicaps into an unreadable grid of boxes. */
+.tee .s.bird{border-color:var(--red); border-radius:50%; color:var(--red); font-weight:700}
+.tee .s.eagle{border-color:var(--red); border-radius:50%; color:var(--red); font-weight:700; box-shadow:0 0 0 1.5px var(--card),0 0 0 3px var(--red)}
+.tee .s.dbl{border-color:var(--ink-3); border-radius:2px; color:var(--ink-2)}
+.tee .s.edit{background:var(--dirty-bg); border-color:var(--dirty); font-weight:700}
+.savebar{
+  position:sticky; bottom:0; z-index:12; display:flex; gap:9px; align-items:center; flex-wrap:wrap;
+  padding:11px 14px calc(11px + env(safe-area-inset-bottom,0px));
+  border-top:1px solid var(--line); background:var(--card);
+}
+.savebar.static{position:static; padding-bottom:11px}
+.savebar .cnt{font-size:12.5px; color:var(--ink-2); margin-right:auto}
+.savebar .cnt b{font-family:var(--mono)}
+.btn{border:1px solid var(--ink); background:var(--ink); color:var(--paper); border-radius:5px; padding:12px 16px; font-size:14px; font-weight:600; min-height:44px}
+.btn:disabled{opacity:.45; cursor:default}
+.btn.ghost{background:none; color:var(--ink); border-color:var(--line)}
+.btn.sm{padding:9px 13px; font-size:13px; min-height:40px}
+.msg{font-size:12.5px; color:var(--ink-3); min-height:1.35em; padding:9px 14px 13px; line-height:1.45}
+.msg.ok{color:var(--good)}
+.msg.err{color:var(--red)}
+.banner{border:1px solid var(--line); border-left:3px solid var(--gold); background:var(--card); border-radius:5px; padding:11px 13px; font-size:13px; color:var(--ink-2); line-height:1.5}
+.banner.warn{border-left-color:var(--red)}
+.banner b{color:var(--ink)}
+.banner.inset{margin:14px 14px 0}
+.legend{display:flex; flex-wrap:wrap; gap:14px; padding:11px 14px; border-top:1px solid var(--line-2); font-size:11.5px; color:var(--ink-3); align-items:center}
+.legend span{display:flex; align-items:center; gap:6px}
+.lg{display:inline-block; width:17px; height:17px; border:1.5px solid var(--ink-3); font-size:0}
+.lg.bird{border-color:var(--red); border-radius:50%}
+.lg.bog{border-radius:2px}
+.lg.strk{border:0; position:relative; width:10px; height:10px}
+.lg.strk::before{content:""; position:absolute; inset:0; margin:auto; width:5px; height:5px; border-radius:50%; background:var(--red)}
+
+/* ---------- hole-by-hole scoring (the on-course view) ---------- */
+/* the score pad: a bottom sheet on phones, a centred dialog on wide screens */
+.sheet{position:fixed; inset:0; z-index:60; display:flex; align-items:flex-end; justify-content:center}
+.sheet-bd{position:absolute; inset:0; background:rgba(6,14,11,.58)}
+.sheet-p{
+  position:relative; width:100%; max-width:600px; max-height:94vh;
+  display:flex; flex-direction:column; overflow:auto; -webkit-overflow-scrolling:touch;
+  background:var(--card); border:1px solid var(--line); border-bottom:0;
+  border-radius:16px 16px 0 0; box-shadow:0 -10px 34px rgba(0,0,0,.34);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (min-width:640px){
+  .sheet{align-items:center}
+  .sheet-p{border-radius:12px; border-bottom:1px solid var(--line); max-height:88vh}
+}
+@media (prefers-reduced-motion:no-preference){
+  .sheet-p{animation:sheetup .2s ease-out}
+  @keyframes sheetup{from{transform:translateY(18px); opacity:.5} to{transform:none; opacity:1}}
+}
+.sheet-grab{flex:0 0 auto; width:38px; height:4px; border-radius:2px; background:var(--line); margin:8px auto 2px}
+@media (min-width:640px){.sheet-grab{display:none}}
+.sheet-h{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:6px 12px 8px}
+.sheet-t{line-height:1.2}
+.sheet-t b{display:block; font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-2)}
+.sheet-t span{font-size:11.5px; color:var(--ink-3); font-family:var(--mono)}
+.sheet-x{
+  width:40px; height:40px; flex:0 0 auto; border:1px solid var(--line); border-radius:8px;
+  background:var(--card); font-size:22px; line-height:1; color:var(--ink-2); display:grid; place-items:center;
+}
+
+.holecard{touch-action:pan-y; overflow:hidden}
+.holebar{
+  display:grid; grid-template-columns:52px 1fr 52px; align-items:center; gap:8px;
+  padding:9px 12px; border-bottom:1px solid var(--line-2); background:var(--card-2);
+}
+.holebar button{
+  height:48px; border:1px solid var(--line); border-radius:6px; background:var(--card);
+  font-size:22px; line-height:1; display:grid; place-items:center; color:var(--ink-2);
+}
+.holebar button:disabled{opacity:.3; cursor:default}
+.hmeta{text-align:center; line-height:1.15}
+.hmeta b{display:block; font-family:var(--mono); font-size:23px; font-weight:700; letter-spacing:-.02em}
+.hmeta em{font-style:normal; font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3)}
+.hmeta .swipe{display:block; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); opacity:.65; margin-top:3px}
+
+.holestrip{display:flex; gap:5px; padding:7px 12px; overflow-x:auto; border-bottom:1px solid var(--line-2); -webkit-overflow-scrolling:touch}
+.hs{
+  flex:0 0 auto; width:40px; height:44px; border-radius:6px; border:1px solid var(--line);
+  background:var(--card); font-family:var(--mono); font-size:13.5px; display:grid; place-items:center;
+  position:relative; color:var(--ink-3);
+}
+.hs[data-done="1"]{background:var(--card-2); color:var(--ink-2)}
+.hs[data-done="1"]::after{content:""; position:absolute; bottom:5px; left:50%; transform:translateX(-50%); width:13px; height:2px; border-radius:1px; background:var(--good)}
+.hs[data-dirty="1"]::after{background:var(--dirty)}
+.hs[aria-current="true"]{border-color:var(--ink); box-shadow:inset 0 0 0 1px var(--ink); color:var(--ink); font-weight:700}
+
+.slidewrap{position:relative}
+@media (prefers-reduced-motion:no-preference){
+  .slidein-l{animation:sl .22s ease-out}
+  .slidein-r{animation:sr .22s ease-out}
+  @keyframes sl{from{transform:translateX(26px); opacity:.4} to{transform:none; opacity:1}}
+  @keyframes sr{from{transform:translateX(-26px); opacity:.4} to{transform:none; opacity:1}}
+}
+.plays{display:grid}
+.play{
+  display:grid; grid-template-columns:1fr auto; gap:10px; align-items:center;
+  padding:8px 12px; border-bottom:1px solid var(--line-2);
+}
+.play:last-child{border-bottom:0}
+.play.n{box-shadow:inset 3px 0 0 var(--navy)}
+.play.g{box-shadow:inset 3px 0 0 var(--gold)}
+.pl{min-width:0}
+.pl b{display:block; font-size:15px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.pl em{font-style:normal; font-size:11.5px; color:var(--ink-3); font-family:var(--mono)}
+.pl .strk{color:var(--red); font-weight:700}
+.pl .net{display:inline-block; margin-left:6px; color:var(--ink-2); font-weight:600}
+/* Phones get the four players two-up so every wheel is reachable without
+   scrolling. Declared after .play so it actually wins the cascade. */
+@media (max-width:620px){
+  .plays{grid-template-columns:1fr 1fr}
+  .play{padding:9px 10px 10px; box-shadow:none; border-top:3px solid transparent}
+  .play.n{border-top-color:var(--navy)}
+  .play.g{border-top-color:var(--gold)}
+  .play:nth-child(odd){border-right:1px solid var(--line-2)}
+  .pl b{font-size:13.5px}
+  .pl em{font-size:10.5px}
+  .pl .net{display:block; margin:1px 0 0}
+}
+
+/* the score wheel: a scroll-snap column, selected value sits in the middle.
+   The frame and the centre band live on the wrapper; the scroller itself is
+   transparent so the band shows through behind the numbers. */
+.wheelwrap{
+  position:relative; flex:0 0 auto; width:76px;
+  border:1px solid var(--line); border-radius:8px; background:var(--card); overflow:hidden;
+}
+.wheelwrap.dirty{border-color:var(--dirty); background:var(--dirty-bg)}
+.wheel{
+  position:relative; z-index:1; width:100%; height:102px;
+  overflow-y:auto; overflow-x:hidden; scroll-snap-type:y mandatory;
+  touch-action:pan-y; -webkit-overflow-scrolling:touch;
+  border:0; background:none; scrollbar-width:none;
+}
+.wheel::-webkit-scrollbar{display:none}
+.wheel[aria-disabled="true"]{opacity:.55}
+.wtrack{padding:34px 0}
+.wv{
+  display:block; width:100%; height:34px; border:0; background:none; padding:0;
+  scroll-snap-align:center; font-family:var(--mono); font-variant-numeric:tabular-nums;
+  font-size:16px; color:var(--ink-3); line-height:34px; text-align:center;
+}
+.wv[data-sel="1"]{color:var(--ink); font-size:22px; font-weight:700}
+.wv.bird[data-sel="1"]{color:var(--red)}
+.wheelband{
+  position:absolute; left:0; right:0; top:34px; height:34px; pointer-events:none;
+  border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+  background:var(--card-2); z-index:0;
+}
+.holeactions{display:flex; gap:9px; align-items:center; padding:11px 12px calc(11px + env(safe-area-inset-bottom,0px)); border-top:1px solid var(--line); background:var(--card); position:sticky; bottom:0; z-index:12; flex-wrap:wrap}
+.holeactions .cnt{font-size:12.5px; color:var(--ink-2); margin-right:auto}
+.holeactions .cnt b{font-family:var(--mono)}
+.holeactions .btn{flex:0 0 auto}
+
+/* the draw: who is off when */
+.drawlist{display:grid}
+.drow{display:grid; grid-template-columns:74px 1fr; gap:10px; align-items:center; padding:10px 14px; border-bottom:1px solid var(--line-2)}
+.drow:last-child{border-bottom:0}
+.dtime{font-family:var(--mono); font-size:13px; font-weight:700; color:var(--ink); letter-spacing:-.02em}
+.dtime span{display:block; font-family:var(--sans); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; font-weight:700; color:var(--ink-3); margin-bottom:1px}
+.dnames{font-size:12.5px; line-height:1.45; min-width:0}
+.dnames .t1{color:var(--navy-ink); font-weight:600}
+.dnames .t2{color:var(--gold-ink); font-weight:600}
+.dnames .vs{color:var(--ink-3); font-weight:400; margin:0 5px}
+
+/* ---------- balance readout, shared by both setup tabs ---------- */
+.bal{display:grid; grid-template-columns:1fr auto 1fr; gap:10px; align-items:center}
+.bal .col{display:grid; gap:2px}
+.bal .col.r{justify-items:end; text-align:right}
+.bal .lab{font-size:10px; letter-spacing:.14em; text-transform:uppercase; font-weight:700}
+.bal .col.n .lab{color:var(--navy)}
+.bal .col.g .lab{color:var(--gold)}
+.bal .fig{font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:21px; font-weight:600; line-height:1.1}
+.bal .sub{font-size:11.5px; color:var(--ink-3); font-family:var(--mono)}
+.bal .mid{font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); text-align:center; line-height:1.4}
+.bal .mid b{display:block; font-family:var(--mono); font-size:15px; letter-spacing:0; color:var(--ink)}
+
+/* ---------- teams tab: drag and drop ---------- */
+.dnd{display:grid; gap:10px; padding:14px}
+.zrow{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.zone{border:1.5px dashed var(--line); border-radius:6px; background:var(--card-2); display:flex; flex-direction:column}
+.zone.n{border-color:color-mix(in srgb,var(--navy) 40%,var(--line))}
+.zone.g{border-color:color-mix(in srgb,var(--gold) 40%,var(--line))}
+.zone.over{background:var(--paper); border-style:solid; box-shadow:inset 0 0 0 2px var(--focus)}
+.zone.n.over{box-shadow:inset 0 0 0 2px var(--navy)}
+.zone.g.over{box-shadow:inset 0 0 0 2px var(--gold)}
+.zhead{
+  display:flex; align-items:baseline; justify-content:space-between; gap:6px;
+  padding:8px 10px 6px; font-size:10px; letter-spacing:.12em; text-transform:uppercase; font-weight:700;
+  color:var(--ink-3);
+}
+.zone.n .zhead{color:var(--navy)}
+.zone.g .zhead{color:var(--gold)}
+.zhead .zc{font-family:var(--mono); font-size:12px; letter-spacing:0}
+.zhead .zc.bad{color:var(--red)}
+.chips{display:flex; flex-wrap:wrap; gap:6px; padding:0 8px 8px; align-content:flex-start; flex:1}
+.zone.pool .chips{min-height:52px}
+.zrow .chips{flex-direction:column; flex-wrap:nowrap; min-height:150px}
+.chip{
+  display:flex; align-items:baseline; gap:6px; text-align:left;
+  background:var(--card); border:1px solid var(--line); border-radius:5px;
+  padding:7px 9px; font-size:12.5px; font-weight:600; line-height:1.2;
+  touch-action:none; user-select:none; -webkit-user-select:none;
+}
+.zrow .chip{width:100%}
+.chip i{font-style:normal; font-family:var(--mono); font-size:10.5px; font-weight:400; color:var(--ink-3); margin-left:auto}
+.chip.n{border-left:3px solid var(--navy)}
+.chip.g{border-left:3px solid var(--gold)}
+.chip.dragging{opacity:.3}
+.chip:disabled{cursor:default; touch-action:auto}
+.chip.ghost{
+  position:fixed; z-index:60; pointer-events:none; margin:0;
+  box-shadow:0 6px 18px rgba(0,0,0,.28); transform:rotate(-1.5deg) scale(1.04);
+  opacity:.96; width:auto; max-width:200px;
+}
+.zempty{font-size:11.5px; color:var(--ink-3); font-style:italic; padding:2px 2px 6px; font-weight:400}
+.dndhint{font-size:12px; color:var(--ink-3); padding:0 14px 12px; line-height:1.5}
+.subrow{display:flex; gap:9px; align-items:flex-end; flex-wrap:wrap}
+.subrow label{
+  display:grid; gap:4px; font-size:10px; letter-spacing:.12em; text-transform:uppercase;
+  font-weight:700; color:var(--ink-3);
+}
+.subrow label:first-child{flex:1 1 150px; max-width:300px}
+.subrow input{
+  height:42px; border:1px solid var(--line); border-radius:5px; background:var(--card);
+  color:var(--ink); font-family:inherit; font-size:16px; font-weight:400; padding:0 9px;
+  letter-spacing:normal; text-transform:none;
+}
+.subrow label:last-of-type input{width:82px; font-family:var(--mono); text-align:center}
+.subrow input:disabled{opacity:.6; cursor:default}
+.subrow input::-webkit-outer-spin-button,.subrow input::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
+
+/* ---------- tee time editor ---------- */
+.setup-m{display:grid; gap:12px; padding:14px}
+@media (min-width:800px){.setup-m{grid-template-columns:1fr 1fr}}
+.sm{border:1px solid var(--line); border-radius:5px; overflow:hidden}
+.sm-h{display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:var(--card-2); border-bottom:1px solid var(--line-2)}
+.sm-h b{font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-2)}
+.slot{display:grid; grid-template-columns:52px 1fr; gap:9px; align-items:center; padding:7px 12px; border-bottom:1px solid var(--line-2)}
+.slot:last-of-type{border-bottom:0}
+.slot.n{box-shadow:inset 3px 0 0 var(--navy)}
+.slot.g{box-shadow:inset 3px 0 0 var(--gold)}
+.slot .sl{font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; font-weight:700; color:var(--ink-3)}
+.slot.n .sl{color:var(--navy)}
+.slot.g .sl{color:var(--gold)}
+.slot select{width:100%; height:42px; border:1px solid var(--line); border-radius:5px; background:var(--card); color:var(--ink); font-family:inherit; font-size:16px; padding:0 7px}
+.slot select:disabled{opacity:.6; cursor:default}
+.mfoot{display:flex; border-top:1px solid var(--line); font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); background:var(--card-2)}
+.mfoot div{flex:1; padding:6px; text-align:center; border-right:1px solid var(--line-2)}
+.mfoot div:last-child{border-right:0}
+.mfoot b{display:block; font-family:var(--mono); font-size:12.5px; margin-top:1px; letter-spacing:0; font-weight:600; color:var(--ink-2)}
+footer{max-width:1100px; margin:0 auto; padding:4px 16px 40px; font-size:11.5px; color:var(--ink-3); text-align:center; line-height:1.6}
+</style>
+</head>
+<body>
+
+<header class="board">
+  <div class="board-in">
+    <div class="board-top">
+      <span>One Round &middot; Net Better Ball</span>
+      <span id="statusNote">Live</span>
+    </div>
+    <div class="board-score">
+      <div class="side n"><span class="side-name">Team 1</span><span class="side-pts" id="ptsN">0</span></div>
+      <div class="board-mid"><span>of 26</span><b id="ptsAwarded">0</b><span>awarded</span></div>
+      <div class="side g r"><span class="side-name">Team 2</span><span class="side-pts" id="ptsG">0</span></div>
+    </div>
+    <div class="lead-note" id="leadNote">Connecting…</div>
+  </div>
+</header>
+
+<nav class="tabs">
+  <div class="tabs-in" role="tablist" aria-label="Sections">
+    <button class="tab" role="tab" id="tab-board" aria-controls="p-board" aria-selected="true">Leaderboard</button>
+    <button class="tab" role="tab" id="tab-tee" aria-controls="p-tee" aria-selected="false">Tee Times &amp; Scorecard<span class="flag" id="teeFlag" hidden></span></button>
+    <button class="tab" role="tab" id="tab-teams" aria-controls="p-teams" aria-selected="false">Teams<span class="flag" id="teamFlag" hidden></span></button>
+  </div>
+</nav>
+
+<main>
+  <div class="panel" id="p-board" role="tabpanel" aria-labelledby="tab-board">
+    <div class="card">
+      <div class="card-h"><h2>Individual board</h2><span class="tag">Strokes to par</span></div>
+      <div class="card-b flush"><div class="scroller"><table class="ind" id="indBoard"></table></div></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h2>Point ledger</h2><span class="tag" id="ledgerTag"></span></div>
+      <div class="card-b flush"><table class="ledger" id="ledger"></table></div>
+    </div>
+  </div>
+
+  <div class="panel" id="p-tee" role="tabpanel" aria-labelledby="tab-tee" hidden>
+    <div class="banner" id="roBanner" hidden>
+      <b>View only on this device.</b> The card still updates live for you, but posting scores needs edit access &mdash; ask Josh to share the page as an editor.
+    </div>
+    <div class="banner warn" id="setupBanner" hidden>
+      <b>Tee times aren't full yet.</b> Use <b>Edit tee times</b> below, or set the sides on the <b>Teams</b> tab first.
+    </div>
+    <div class="card" id="gridCard">
+      <div class="card-h">
+        <h2>Scorecard</h2>
+        <span class="tag">Tap a hole to score it</span>
+      </div>
+      <div class="teewrap" id="teeWrap"><table class="tee" id="teeGrid"></table></div>
+      <div class="savebar">
+        <span class="cnt" id="dirtyCount">Tap a cell and type a gross score.</span>
+        <button class="btn ghost sm" id="discardBtn" disabled>Discard</button>
+        <button class="btn sm" id="saveBtn" disabled>Post scores</button>
+      </div>
+      <div class="msg" id="saveMsg"></div>
+      <div class="legend">
+        <span><i class="lg bird"></i> birdie or better</span>
+        <span><i class="lg bog"></i> double bogey or worse</span>
+        <span><i class="lg strk"></i> gets a stroke</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">
+        <h2 id="drawTag">The draw</h2>
+        <button class="btn ghost sm" id="editTeeBtn">Edit tee times</button>
+      </div>
+      <div class="card-b flush"><div class="drawlist" id="drawList"></div></div>
+    </div>
+
+    <div class="card" id="teeSetupCard" hidden>
+      <div class="card-h"><h2>Build the tee times</h2><span class="tag" id="slotTag"></span></div>
+      <div class="banner inset" id="lockBannerTee" hidden>
+        <b>The draw is locked.</b> Unlock on the Teams tab to change it.
+      </div>
+      <div class="banner warn inset" id="unevenBanner" hidden>
+        <b>The sides aren't eight and eight yet.</b> Every tee time needs two from each team, so finish the <b>Teams</b> tab first.
+      </div>
+      <div class="setup-m" id="setupMatches"></div>
+      <div class="savebar static">
+        <span class="cnt" id="teeMsg"></span>
+        <button class="btn ghost sm" id="autoPairBtn">Auto-pair</button>
+        <button class="btn ghost sm" id="clearSlotsBtn">Empty all</button>
+        <button class="btn ghost sm" id="revertSlotsBtn">Revert</button>
+        <button class="btn sm" id="saveSlotsBtn">Save tee times</button>
+      </div>
+      <div class="msg" id="pairMsg">Auto-pair puts each team's low man with its high man, then matches the four pairings so the tee times carry near-equal strokes.</div>
+    </div>
+  </div>
+
+  <div class="panel" id="p-teams" role="tabpanel" aria-labelledby="tab-teams" hidden>
+    <div class="banner" id="roBanner2" hidden>
+      <b>View only on this device.</b> Changing the sides needs edit access.
+    </div>
+    <div class="banner inset" id="lockBanner" hidden style="margin:0">
+      <b>The draw is locked.</b> Unlock below to move anybody between teams.
+    </div>
+    <div class="banner warn" id="rescoreBanner" hidden>
+      <b>Scores are already posted.</b> Moving players recalculates every match and point from the same scorecards.
+    </div>
+    <div class="card">
+      <div class="card-h"><h2>The sixteenth player</h2><span class="tag" id="subTag">open</span></div>
+      <div class="card-b">
+        <div class="subrow">
+          <label>Name<input id="subName" type="text" maxlength="28" placeholder="TBD" autocomplete="off"></label>
+          <label>Handicap<input id="subHcp" type="number" inputmode="numeric" min="0" max="40" step="1"></label>
+          <button class="btn sm" id="saveSubBtn">Save</button>
+        </div>
+        <p class="dndhint" style="padding:10px 0 0">Fill this in when you find your sixteenth. The name and handicap flow through the sides, the tee times and the scorecard &mdash; anything already posted against the open seat carries over.</p>
+      </div>
+      <div class="msg" id="subMsg"></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h2>The two sides</h2><span class="tag" id="teamTag"></span></div>
+      <div class="card-b">
+        <div class="bal">
+          <div class="col n"><span class="lab">Team 1</span><span class="fig" id="balN">0</span><span class="sub" id="balNs">0 players</span></div>
+          <div class="mid"><span>gap</span><b id="balGap">0</b><span>strokes</span></div>
+          <div class="col g r"><span class="lab">Team 2</span><span class="fig" id="balG">0</span><span class="sub" id="balGs">0 players</span></div>
+        </div>
+      </div>
+      <div class="dnd">
+        <div class="zone pool" data-zone="pool">
+          <div class="zhead"><span>Unassigned</span><span class="zc" id="zcPool">16</span></div>
+          <div class="chips" id="zonePool"></div>
+        </div>
+        <div class="zrow">
+          <div class="zone n" data-zone="n">
+            <div class="zhead"><span>Team 1</span><span class="zc" id="zcN">0</span></div>
+            <div class="chips" id="zoneN"></div>
+          </div>
+          <div class="zone g" data-zone="g">
+            <div class="zhead"><span>Team 2</span><span class="zc" id="zcG">0</span></div>
+            <div class="chips" id="zoneG"></div>
+          </div>
+        </div>
+      </div>
+      <p class="dndhint">Drag a name into either side, or between them. No mouse? Tap a name to send it across, or focus it and press the left and right arrow keys.</p>
+      <div class="savebar static">
+        <span class="cnt" id="teamMsg"></span>
+        <button class="btn ghost sm" id="lockBtn">Lock</button>
+        <button class="btn ghost sm" id="balanceBtn">Auto-balance</button>
+        <button class="btn ghost sm" id="rerollBtn">Re-roll</button>
+        <button class="btn ghost sm" id="clearTeamsBtn">Clear</button>
+        <button class="btn ghost sm" id="revertTeamsBtn">Revert</button>
+        <button class="btn sm" id="saveTeamsBtn">Save teams</button>
+      </div>
+      <div class="msg" id="balMsg">Auto-balance snake-drafts by handicap, then trades single players until the two sides sit as close as they can.</div>
+    </div>
+  </div>
+</main>
+<footer>Posting scores updates every open device within a few seconds. Two people posting at once is fine &mdash; the later post is re-applied automatically.</footer>
+
+
+<div class="sheet" id="holeSheet" hidden>
+  <div class="sheet-bd" id="sheetBackdrop"></div>
+  <div class="sheet-p" id="sheetPanel" role="dialog" aria-modal="true" aria-labelledby="hNum">
+    <div class="sheet-grab"></div>
+    <div class="sheet-h">
+      <div class="sheet-t"><b id="sheetWho">Match 1</b><span id="sheetWhen">10:08 AM</span></div>
+      <button type="button" class="sheet-x" id="sheetClose" aria-label="Close the score pad">&times;</button>
+    </div>
+    <div class="holecard" id="holeSwipe">
+      <div class="holebar">
+        <button type="button" id="hPrev" aria-label="Previous hole">&#8249;</button>
+        <div class="hmeta">
+          <b id="hNum">Hole 1</b>
+          <em id="hInfo">Par 5 &middot; Index 10</em>
+          <span class="swipe">swipe to change hole</span>
+        </div>
+        <button type="button" id="hNext" aria-label="Next hole">&#8250;</button>
+      </div>
+      <div class="holestrip" id="holeStrip"></div>
+      <div class="slidewrap"><div class="plays" id="playRows"></div></div>
+    </div>
+    <div class="holeactions">
+      <span class="cnt" id="holeCnt"></span>
+      <button class="btn ghost sm" id="holeDiscard" disabled>Discard</button>
+      <button class="btn sm" id="holeNext">Next hole</button>
+    </div>
+    <div class="msg" id="holeMsg"></div>
+  </div>
+</div>
+<script>
+(function(){
+"use strict";
+
+var PAR=[5,4,3,4,5,3,4,4,4,4,5,4,3,5,3,4,4,4];
+var SI =[10,2,18,14,6,16,8,4,12,5,3,11,17,9,15,13,1,7];
+var TOTAL_PAR=72;
+var OUT_PAR=PAR.slice(0,9).reduce(function(a,b){return a+b;},0);
+var IN_PAR=PAR.slice(9).reduce(function(a,b){return a+b;},0);
+
+var P=[
+  {id:"lee",     name:"Lee Cooper",         hcp:2},
+  {id:"kallan",  name:"Kallan Walters",     hcp:3},
+  {id:"alec",    name:"Alec Bove",          hcp:4},
+  {id:"camden",  name:"Camden Cooper",      hcp:7},
+  {id:"johng",   name:"John Gressett",      hcp:9},
+  {id:"will",    name:"Will Hayward",       hcp:12},
+  {id:"brett",   name:"Brett Fair",         hcp:12},
+  {id:"sam",     name:"Sam Brown",          hcp:12},
+  {id:"josh",    name:"Josh John",          hcp:12},
+  {id:"brady",   name:"Brady Gayle",        hcp:12},
+  {id:"zach",    name:"Zach Brantley",      hcp:12},
+  {id:"rob",     name:"Rob Wallace",        hcp:12},
+  {id:"stephen", name:"Stephen Wheatcroft", hcp:15},
+  {id:"cain",    name:"Cain Cody",          hcp:15},
+  {id:"towner",  name:"Towner Webster",     hcp:15},
+  {id:"p16",     name:"TBD",                hcp:12}
+];
+var SUB_ID="p16";                 /* the open sixteenth seat, named from the page */
+var BY={}; P.forEach(function(p){BY[p.id]=p;});
+/* strokes ARE the adjusted handicap — nobody is normalised to scratch */
+function applyHcp(){ P.forEach(function(p){ p.str=p.hcp; }); }
+applyHcp();
+
+var TEAM={n:"Team 1",g:"Team 2"};
+function teamName(t){ return TEAM[t]||"unassigned"; }
+var SIDE_SIZE=8, NSLOT=16;
+
+/* Match 1 goes off at 10:08, every match after it eight minutes later */
+var TEE_FIRST=10*60+8, TEE_GAP=8;
+function teeTime(m){
+  var t=TEE_FIRST+m*TEE_GAP, h=Math.floor(t/60)%24, mi=t%60;
+  var ap=h>=12?"PM":"AM", h12=h%12;
+  if(h12===0) h12=12;
+  return h12+":"+(mi<10?"0":"")+mi+" "+ap;
+}
+
+var DEFAULT_TEAMS={
+  alec:"n", towner:"n", camden:"n", rob:"n", johng:"n", p16:"n", sam:"n", josh:"n",
+  lee:"g", cain:"g", kallan:"g", stephen:"g", will:"g", brett:"g", brady:"g", zach:"g"
+};
+var DEFAULT_SLOTS=["alec","towner","lee","cain",
+                   "camden","rob","kallan","stephen",
+                   "johng","p16","will","brett",
+                   "sam","josh","brady","zach"];
+
+/* tee-time slot layout: match m holds 4m..4m+3 — first two are Team 1, last two Team 2 */
+function slotTeam(i){ return (i%4)<2?"n":"g"; }
+function slotMatch(i){ return Math.floor(i/4); }
+
+/* A slot may only hold a player who is actually on that side. Whenever the sides
+   change, anyone sitting on the wrong side of a tee time is turfed out. */
+function reconcile(slots,teams){
+  var seen={};
+  return slots.map(function(id,i){
+    if(!id||!BY[id]) return null;
+    if(teams[id]!==slotTeam(i)) return null;
+    if(seen[id]) return null;
+    seen[id]=1;
+    return id;
+  });
+}
+
+var DEFAULT_STATE={
+  teams:DEFAULT_TEAMS,
+  slots:DEFAULT_SLOTS,
+  locked:false,
+  sub:{name:"",hcp:12},
+  gross:{}
+};
+function blankGross(){
+  var g={};
+  P.forEach(function(p){
+    var row=[];
+    for(var h=0;h<18;h++) row.push(null);
+    g[p.id]=row;
+  });
+  return g;
+}
+var state={v:4,teams:{},slots:[],locked:false,sub:{name:"",hcp:12},gross:blankGross()};
+P.forEach(function(p){ state.teams[p.id]=DEFAULT_TEAMS[p.id]||null; });
+for(var _i=0;_i<NSLOT;_i++) state.slots.push(DEFAULT_SLOTS[_i]||null);
+
+/* push the open seat's name and handicap onto the roster entry, so every display
+   and every stroke calculation picks them up with no special-casing */
+function applySub(){
+  BY[SUB_ID].name=state.sub.name||"TBD";
+  BY[SUB_ID].hcp=state.sub.hcp;
+  applyHcp();
+}
+applySub();
+function subNamed(){ return !!state.sub.name; }
+
+/* Fold a Realtime Database snapshot into local state. Firebase drops null
+   entries and turns sparse arrays into objects, so both shapes are handled. */
+function applyRemote(raw){
+  raw=raw||{};
+  var t=raw.teams||{};
+  P.forEach(function(p){
+    var v=t[p.id];
+    state.teams[p.id]=(v==="n"||v==="g")?v:null;
+  });
+  var sl=raw.slots||{};
+  for(var i=0;i<NSLOT;i++){
+    var id=Array.isArray(sl)?sl[i]:sl[String(i)];
+    state.slots[i]=(typeof id==="string"&&BY[id])?id:null;
+  }
+  state.slots=reconcile(state.slots,state.teams);
+  state.locked=raw.locked===true;
+  var sb=raw.sub||{};
+  state.sub={
+    name:typeof sb.name==="string"?sb.name.trim().slice(0,28):"",
+    hcp:(typeof sb.hcp==="number"&&isFinite(sb.hcp))?Math.max(0,Math.min(40,Math.round(sb.hcp))):12
+  };
+  var g=raw.gross||{};
+  P.forEach(function(p){
+    var row=g[p.id]||{}, out=[];
+    for(var h=0;h<18;h++){
+      var v=Array.isArray(row)?row[h]:row[String(h)];
+      out.push((typeof v==="number"&&isFinite(v)&&v>0)?Math.round(v):null);
+    }
+    state.gross[p.id]=out;
+  });
+  applySub();
+}
+
+function teamOf(pid){ return state.teams[pid]||null; }
+function roster(t){ return P.filter(function(p){ return state.teams[p.id]===t; }); }
+function sideCount(teams,t){
+  return P.filter(function(p){ return teams[p.id]===t; }).length;
+}
+function evenSides(teams){
+  return sideCount(teams,"n")===SIDE_SIZE&&sideCount(teams,"g")===SIDE_SIZE;
+}
+function matchesOf(slots){
+  var out=[];
+  for(var m=0;m<4;m++){
+    out.push({no:m+1,
+      n:[slots[m*4],slots[m*4+1]].filter(Boolean),
+      g:[slots[m*4+2],slots[m*4+3]].filter(Boolean)});
+  }
+  return out;
+}
+function assignedCount(slots){ return slots.filter(Boolean).length; }
+
+function strokeOn(p,h){ return SI[h]<=p.str?1:0; }
+function netAt(pid,h){
+  var v=state.gross[pid][h];
+  return v===null?null:v-strokeOn(BY[pid],h);
+}
+function bestNet(ids,h){
+  var best=null;
+  for(var i=0;i<ids.length;i++){
+    var v=netAt(ids[i],h);
+    if(v!==null&&(best===null||v<best)) best=v;
+  }
+  return best;
+}
+function tally(pid){
+  var played=0,gross=0,net=0,par=0,bird=0,out=0,inn=0,done=true,last=0;
+  for(var h=0;h<18;h++){
+    var v=state.gross[pid][h];
+    if(v===null){ done=false; continue; }
+    played++; gross+=v; net+=v-strokeOn(BY[pid],h); par+=PAR[h];
+    if(h<9) out+=v; else inn+=v;
+    if(v<=PAR[h]-1) bird++;
+    last=h+1;                 /* the furthest hole they have actually posted */
+  }
+  return {played:played,gross:gross,net:net,par:par,bird:bird,out:out,inn:inn,
+          done:done,last:last,toPar:net-par};
+}
+function anyScores(){
+  return P.some(function(p){ return state.gross[p.id].some(function(v){ return v!==null; }); });
+}
+
+function matchState(m){
+  var f=[0,0], b=[0,0], played=0, fP=0, bP=0;
+  if(!m.n.length||!m.g.length) return {f:f,b:b,won:[0,0],pts:[0,0],played:0,fPlayed:0,bPlayed:0,ready:false};
+  for(var h=0;h<18;h++){
+    var a=bestNet(m.n,h), c=bestNet(m.g,h);
+    if(a===null||c===null) continue;
+    played++;
+    var seg=h<9?f:b;
+    if(h<9) fP++; else bP++;
+    if(a<c) seg[0]++; else if(c<a) seg[1]++;
+  }
+  var won=[f[0]+b[0],f[1]+b[1]], pts=[0,0];
+  if(fP>0){ if(f[0]>f[1]) pts[0]+=1; else if(f[1]>f[0]) pts[1]+=1; else { pts[0]+=0.5; pts[1]+=0.5; } }
+  if(bP>0){ if(b[0]>b[1]) pts[0]+=1; else if(b[1]>b[0]) pts[1]+=1; else { pts[0]+=0.5; pts[1]+=0.5; } }
+  if(played>0){ if(won[0]>won[1]) pts[0]+=2; else if(won[1]>won[0]) pts[1]+=2; else { pts[0]+=1; pts[1]+=1; } }
+  return {f:f,b:b,won:won,pts:pts,played:played,fPlayed:fP,bPlayed:bP,ready:true};
+}
+
+function compute(){
+  var pts=[0,0], awarded=0;
+  var ms=matchesOf(state.slots).map(function(m){
+    var s=matchState(m);
+    pts[0]+=s.pts[0]; pts[1]+=s.pts[1]; awarded+=s.pts[0]+s.pts[1];
+    return {m:m,s:s};
+  });
+  var tallies={}; P.forEach(function(p){ tallies[p.id]=tally(p.id); });
+  var field=P.filter(function(p){ return teamOf(p.id); }).map(function(p){ return p.id; });
+  var allDone=field.length>0&&field.every(function(id){ return tallies[id].done; });
+
+  function low4(a){ return a.slice().sort(function(x,y){return x-y;}).slice(0,4).reduce(function(x,y){return x+y;},0); }
+  function sum(a){ return a.reduce(function(x,y){return x+y;},0); }
+  function listOf(t,key){ return roster(t).map(function(p){ return tallies[p.id][key]; }); }
+  function split(a,b,w,low){
+    if(low?a<b:a>b) return [w,0];
+    if(low?b<a:b>a) return [0,w];
+    return [w/2,w/2];
+  }
+  /* Only finished rounds can win a round title — an untouched card sums to net 0
+     and would otherwise tie a dozen players for the lead. */
+  var finished=field.filter(function(id){ return tallies[id].done; });
+  function bestIndiv(key){
+    var lo=Infinity, win=[];
+    finished.forEach(function(id){
+      var v=tallies[id][key];
+      if(v<lo){ lo=v; win=[id]; } else if(v===lo){ win.push(id); }
+    });
+    var n=win.filter(function(id){ return teamOf(id)==="n"; }).length;
+    return {lo:lo,n:n,g:win.length-n,names:win.map(function(id){ return BY[id].name; })};
+  }
+  function doneNets(t){
+    return roster(t).filter(function(p){ return tallies[p.id].done; })
+                    .map(function(p){ return tallies[p.id].net; });
+  }
+  var dnN=doneNets("n"), dnG=doneNets("g");
+  var aggN=low4(dnN), aggG=low4(dnG);
+  var aggReady=dnN.length>=4&&dnG.length>=4;
+  var bn=bestIndiv("net"), bg=bestIndiv("gross");
+  var birdN=sum(listOf("n","bird")), birdG=sum(listOf("g","bird"));
+
+  function nameList(b,unit){
+    if(b.lo===Infinity) return "no round complete yet";
+    var who=b.names.length>3?(b.names.length+" tied"):b.names.join(", ");
+    return who+" · "+unit+" "+b.lo;
+  }
+  var bonuses=[
+    {label:"Team aggregate",worth:4,
+     sub:aggReady?("Four lowest net rounds · "+TEAM.n+": "+aggN+" · "+TEAM.g+": "+aggG)
+                 :("Four lowest net rounds · needs 4 finished a side ("+dnN.length+" / "+dnG.length+")"),
+     pts:split(aggN,aggG,4,true)},
+    {label:"Low net round",worth:2,sub:nameList(bn,"net"),
+     pts:bn.n===bn.g?[1,1]:(bn.n>bn.g?[2,0]:[0,2])},
+    {label:"Low gross round",worth:2,sub:nameList(bg,"gross"),
+     pts:bg.n===bg.g?[1,1]:(bg.n>bg.g?[2,0]:[0,2])},
+    {label:"Birdie count",worth:2,sub:TEAM.n+": "+birdN+" · "+TEAM.g+": "+birdG,
+     pts:split(birdN,birdG,2,false)}
+  ];
+  if(allDone) bonuses.forEach(function(b){ pts[0]+=b.pts[0]; pts[1]+=b.pts[1]; awarded+=b.worth; });
+
+  return {pts:pts,awarded:awarded,ms:ms,tallies:tallies,allDone:allDone,bonuses:bonuses,
+          anyScore:anyScores(),field:field,
+          aggAllN:sum(listOf("n","net")),aggAllG:sum(listOf("g","net"))};
+}
+
+/* ---------- auto assignment ---------- */
+function balancedTeams(shuffle){
+  var order=P.slice();
+  if(shuffle){
+    for(var i=order.length-1;i>0;i--){
+      var j=Math.floor(Math.random()*(i+1));
+      var t=order[i]; order[i]=order[j]; order[j]=t;
+    }
+  }
+  order.sort(function(a,b){ return a.hcp-b.hcp||a.name.localeCompare(b.name); });
+  var A=[],B=[];
+  order.forEach(function(p,i){
+    var back=Math.floor(i/2)%2===1, first=i%2===0;
+    ((back?!first:first)?A:B).push(p);
+  });
+  function tot(a){ return a.reduce(function(s,p){ return s+p.hcp; },0); }
+  var improved=true, guard=0;
+  while(improved&&guard++<40){
+    improved=false;
+    var d=tot(A)-tot(B);
+    for(var a=0;a<A.length&&!improved;a++){
+      for(var b=0;b<B.length;b++){
+        if(Math.abs(d+2*(B[b].hcp-A[a].hcp))<Math.abs(d)-1e-9){
+          var t2=A[a]; A[a]=B[b]; B[b]=t2; improved=true; break;
+        }
+      }
+    }
+  }
+  var out={};
+  P.forEach(function(p){ out[p.id]=null; });
+  A.forEach(function(p){ out[p.id]="n"; });
+  B.forEach(function(p){ out[p.id]="g"; });
+  return out;
+}
+
+/* pair each side low-with-high, then match the pairings on combined strokes */
+function pairedSlots(teams){
+  function pairs(side){
+    var s=P.filter(function(p){ return teams[p.id]===side; })
+           .sort(function(x,y){ return x.str-y.str||x.name.localeCompare(y.name); });
+    var out=[];
+    for(var i=0;i<SIDE_SIZE/2;i++) out.push([s[i],s[SIDE_SIZE-1-i]]);
+    out.sort(function(x,y){ return (x[0].str+x[1].str)-(y[0].str+y[1].str); });
+    return out;
+  }
+  var pa=pairs("n"), pb=pairs("g"), slots=[];
+  for(var m=0;m<4;m++) slots.push(pa[m][0].id,pa[m][1].id,pb[m][0].id,pb[m][1].id);
+  return slots;
+}
+
+function fmt(n){ return n%1===0?String(n):n.toFixed(1); }
+function toPar(v){ return v===0?"E":(v>0?"+"+v:String(v)); }
+function el(tag,cls,txt){
+  var e=document.createElement(tag);
+  if(cls) e.className=cls;
+  if(txt!==undefined&&txt!==null) e.textContent=txt;
+  return e;
+}
+function shortName(name){
+  var b=String(name).trim().split(/\s+/);
+  if(b.length<2) return b[0]||"TBD";
+  return b[0]+" "+b[b.length-1].charAt(0)+".";
+}
+function byId(x){ return document.getElementById(x); }
+
+var api=null, readOnly=false, saving=false;
+var PKEY="ssg-pending-v4", TKEY="ssg-tries-v4", GKEY="ssg-group-v1";
+var teamDraft={}, slotDraft=state.slots.slice();
+P.forEach(function(p){ teamDraft[p.id]=state.teams[p.id]; });
+var teeSetupOpen=false;
+
+var savedGross={};
+function snapshotSaved(){
+  savedGross={};
+  P.forEach(function(p){ savedGross[p.id]=state.gross[p.id].slice(); });
+}
+snapshotSaved();
+function isEdited(pid,h){ return state.gross[pid][h]!==savedGross[pid][h]; }
+function editList(){
+  var out=[];
+  P.forEach(function(p){
+    for(var h=0;h<18;h++) if(isEdited(p.id,h)) out.push({pid:p.id,hole:h,val:state.gross[p.id][h]});
+  });
+  return out;
+}
+function editCount(){ return editList().length; }
+
+/* ---------- leaderboard ---------- */
+function renderLedger(c){
+  var t=byId("ledger");
+  t.textContent="";
+  var tb=el("tbody");
+  function row(label,sub,pn,pg,pending){
+    var tr=el("tr");
+    tr.appendChild(el("td","pt "+(pn>pg?"n":"z"),fmt(pn)));
+    var mid=el("td","lbl");
+    mid.appendChild(document.createTextNode(label));
+    if(pending) mid.appendChild(el("span","pend","pending"));
+    if(sub) mid.appendChild(el("span","sub",sub));
+    tr.appendChild(mid);
+    tr.appendChild(el("td","pt "+(pg>pn?"g":"z"),fmt(pg)));
+    return tr;
+  }
+  c.ms.forEach(function(x){
+    function names(ids){ return ids.length?ids.map(function(i){ return BY[i].name.split(" ")[0]; }).join(" / "):"open"; }
+    var where=!x.s.ready?"needs players":(x.s.played?("thru "+x.s.played):"not started");
+    tb.appendChild(row("Match "+x.m.no+" · 4 pts",
+      names(x.m.n)+"  vs  "+names(x.m.g)+"  ·  "+where,
+      x.s.pts[0], x.s.pts[1], x.s.played<18));
+  });
+  c.bonuses.forEach(function(b){
+    tb.appendChild(row(b.label+" · "+b.worth+" pts",b.sub,
+      c.allDone?b.pts[0]:0,c.allDone?b.pts[1]:0,!c.allDone));
+  });
+  t.appendChild(tb);
+  var tf=el("tfoot"), tr=el("tr");
+  tr.appendChild(el("td","pt "+(c.pts[0]>c.pts[1]?"n":"z"),fmt(c.pts[0])));
+  tr.appendChild(el("td",null,"Awarded · "+fmt(c.awarded)+" of 26"));
+  tr.appendChild(el("td","pt "+(c.pts[1]>c.pts[0]?"g":"z"),fmt(c.pts[1])));
+  tf.appendChild(tr); t.appendChild(tf);
+  byId("ledgerTag").textContent=c.allDone?"final":"net agg "+c.aggAllN+"–"+c.aggAllG;
+}
+
+function renderInd(c){
+  var t=byId("indBoard");
+  t.textContent="";
+  var thead=el("thead"), hr=el("tr");
+  ["Player","Gross","Net","Thru"].forEach(function(h){ hr.appendChild(el("th",null,h)); });
+  thead.appendChild(hr); t.appendChild(thead);
+  var rows=P.map(function(p){ return {p:p,t:c.tallies[p.id]}; })
+    .filter(function(r){ return r.t.played>0; })
+    .sort(function(a,b){ return a.t.toPar-b.t.toPar||b.t.played-a.t.played; });
+  var tb=el("tbody");
+  if(!rows.length){
+    var tr0=el("tr"), td0=el("td","dim","No rounds started.");
+    td0.colSpan=4; tr0.appendChild(td0); tb.appendChild(tr0);
+  }
+  rows.forEach(function(r){
+    var tr=el("tr");
+    var who=el("td","who");
+    who.appendChild(el("span","swatch "+(teamOf(r.p.id)||"")));
+    who.appendChild(document.createTextNode(r.p.name));
+    tr.appendChild(who);
+    /* both figures are strokes against the par of the holes actually played */
+    var gp=r.t.gross-r.t.par;
+    tr.appendChild(el("td","v big"+(gp<0?" under":""),toPar(gp)));
+    tr.appendChild(el("td","v big"+(r.t.toPar<0?" under":""),toPar(r.t.toPar)));
+    tr.appendChild(el("td","v dim",r.t.last?String(r.t.last):"–"));
+    tb.appendChild(tr);
+  });
+  t.appendChild(tb);
+}
+
+function renderBoard(c){ renderInd(c); renderLedger(c); }
+
+/* ---------- the scorecard grid ---------- */
+function shapeFor(v,h){
+  if(v===null) return "";
+  var d=v-PAR[h];
+  if(d<=-2) return "eagle";
+  if(d===-1) return "bird";
+  if(d>=2) return "dbl";
+  return "";
+}
+function paintCell(cell){
+  var pid=cell.getAttribute("data-pid"), h=+cell.getAttribute("data-hole");
+  var v=state.gross[pid][h];
+  cell.className="s "+shapeFor(v,h)+(isEdited(pid,h)?" edit":"");
+  cell.textContent=v===null?"":String(v);
+}
+function refreshRow(pid){
+  var t=tally(pid);
+  var tp=document.querySelector('[data-topar="'+pid+'"]');
+  if(tp){
+    tp.textContent=t.played?toPar(t.toPar):"–";
+    tp.className="topar"+(t.played?(t.toPar<0?" under":""):" none");
+  }
+  function set(k,val){
+    var c=document.querySelector('[data-'+k+'="'+pid+'"]');
+    if(c) c.textContent=val;
+  }
+  set("out",t.out||"–");
+  set("inn",t.inn||"–");
+  set("gtot",t.gross||"–");
+}
+function refreshSaveBar(){
+  var n=editCount();
+  byId("saveBtn").disabled=!n||saving||readOnly;
+  byId("discardBtn").disabled=!n||saving;
+  byId("saveBtn").textContent=saving?"Posting…":(n?("Post "+n+" score"+(n===1?"":"s")):"Post scores");
+  var c=byId("dirtyCount");
+  c.textContent="";
+  if(readOnly){ c.textContent="View only on this device."; }
+  else if(n){
+    c.appendChild(el("b",null,String(n)));
+    c.appendChild(document.createTextNode(" unsaved change"+(n===1?"":"s")));
+  }else{
+    c.textContent="Tap a cell and type a gross score.";
+  }
+  byId("teeFlag").hidden=!(n||assignedCount(state.slots)<NSLOT);
+}
+function refreshHeader(){
+  var c=compute();
+  byId("ptsN").textContent=fmt(c.pts[0]);
+  byId("ptsG").textContent=fmt(c.pts[1]);
+  byId("ptsAwarded").textContent=fmt(c.awarded);
+  var note=byId("leadNote");
+  note.textContent="";
+  if(!evenSides(state.teams)){
+    note.textContent="Sides not set — "+sideCount(state.teams,"n")+" on "+TEAM.n+
+      ", "+sideCount(state.teams,"g")+" on "+TEAM.g+".";
+  }else if(assignedCount(state.slots)<NSLOT){
+    note.textContent="Tee times incomplete — "+assignedCount(state.slots)+" of 16 placed.";
+  }else if(!c.anyScore){
+    note.textContent="Draw is set. Post a score to start the board.";
+  }else{
+    var d=c.pts[0]-c.pts[1], rem=26-c.awarded;
+    note.appendChild(el("strong",null,d===0?"All square":(teamName(d>0?"n":"g")+" by "+fmt(Math.abs(d)))));
+    note.appendChild(document.createTextNode(c.allDone?" · final":" · "+fmt(rem)+" point"+(rem===1?"":"s")+" still on the board"));
+  }
+  byId("statusNote").textContent=c.allDone?"Final":"Live";
+  byId("setupBanner").hidden=assignedCount(state.slots)===NSLOT;
+  return c;
+}
+
+function renderTeeGrid(){
+  var t=byId("teeGrid");
+  t.textContent="";
+  var COLS=23;
+  var thead=el("thead"), hr=el("tr");
+  hr.appendChild(el("th","fx c1","Player"));
+  hr.appendChild(el("th","fx c2","Net ±"));
+  for(var h=1;h<=18;h++) hr.appendChild(el("th",null,String(h)));
+  hr.appendChild(el("th","tot","Out"));
+  hr.appendChild(el("th","tot","In"));
+  hr.appendChild(el("th","tot","Tot"));
+  thead.appendChild(hr);
+  var pr=el("tr","parrow");
+  pr.appendChild(el("th","fx c1","Par"));
+  pr.appendChild(el("th","fx c2",""));
+  PAR.forEach(function(p){ pr.appendChild(el("td",null,String(p))); });
+  pr.appendChild(el("td","tot",String(OUT_PAR)));
+  pr.appendChild(el("td","tot",String(IN_PAR)));
+  pr.appendChild(el("td","tot",String(TOTAL_PAR)));
+  thead.appendChild(pr);
+  t.appendChild(thead);
+
+  var tb=el("tbody");
+  var groups=matchesOf(state.slots).map(function(m){
+    return {label:"Match "+m.no+"  ·  "+teeTime(m.no-1),
+      info:(m.n.length?m.n.map(function(i){return shortName(BY[i].name);}).join(" / "):"open")
+           +"  vs  "+
+           (m.g.length?m.g.map(function(i){return shortName(BY[i].name);}).join(" / "):"open"),
+      rows:[].concat(m.n.map(function(i){return {id:i,team:"n"};}),
+                     m.g.map(function(i){return {id:i,team:"g"};}))};
+  });
+  var placed={}; state.slots.forEach(function(id){ if(id) placed[id]=1; });
+  var spare=P.filter(function(p){ return !placed[p.id]; });
+  if(spare.length){
+    groups.push({label:"No tee time",
+      info:"not in a tee time yet — these scores count for the individual board only",
+      rows:spare.map(function(p){ return {id:p.id,team:teamOf(p.id)||""}; })});
+  }
+
+  groups.forEach(function(gr){
+    var g=el("tr","grp");
+    var gh=el("th",null,gr.label); gh.colSpan=2; g.appendChild(gh);
+    var gi=el("td",null,gr.info); gi.colSpan=COLS-2; g.appendChild(gi);
+    tb.appendChild(g);
+    gr.rows.forEach(function(r){
+      var p=BY[r.id], tr=el("tr",r.team);
+      var c1=el("td","fx c1 pcell");
+      c1.appendChild(el("b",null,p.name));
+      c1.appendChild(el("span",null,"hcp "+p.str));
+      tr.appendChild(c1);
+      var tl=tally(p.id);
+      var c2=el("td","fx c2");
+      var tp=el("span","topar"+(tl.played?(tl.toPar<0?" under":""):" none"),tl.played?toPar(tl.toPar):"–");
+      tp.setAttribute("data-topar",p.id);
+      c2.appendChild(tp);
+      tr.appendChild(c2);
+      for(var h=0;h<18;h++){
+        (function(h){
+          var td=el("td","hole"+(strokeOn(p,h)?" strk":""));
+          var v=state.gross[p.id][h];
+          var b2=el("button","s "+shapeFor(v,h)+(isEdited(p.id,h)?" edit":""));
+          b2.type="button";
+          b2.setAttribute("data-pid",p.id);
+          b2.setAttribute("data-hole",String(h));
+          b2.textContent=v===null?"":String(v);
+          b2.setAttribute("aria-label",p.name+", hole "+(h+1)+", par "+PAR[h]+
+            (v===null?", no score":", "+v)+(strokeOn(p,h)?", gets a stroke":"")+
+            ". Opens the score pad.");
+          b2.addEventListener("click",function(){ openSheet(h,p.id); });
+          td.appendChild(b2);
+          tr.appendChild(td);
+        })(h);
+      }
+      function totCell(key,val){
+        var td=el("td","tot",val||"–");
+        td.setAttribute("data-"+key,p.id);
+        return td;
+      }
+      tr.appendChild(totCell("out",tl.out?String(tl.out):""));
+      tr.appendChild(totCell("inn",tl.inn?String(tl.inn):""));
+      tr.appendChild(totCell("gtot",tl.gross?String(tl.gross):""));
+      tb.appendChild(tr);
+    });
+  });
+  t.appendChild(tb);
+}
+
+function repaintAll(){
+  Array.prototype.forEach.call(byId("teeGrid").querySelectorAll(".s"),paintCell);
+  P.forEach(function(p){ refreshRow(p.id); });
+}
+
+/* ---------- teams tab ---------- */
+function teamDraftDirty(){
+  for(var i=0;i<P.length;i++) if(teamDraft[P[i].id]!==state.teams[P[i].id]) return true;
+  return false;
+}
+/* Pointer-events drag: one code path for mouse and touch, since HTML5 dragstart
+   never fires on a phone and this gets used on a phone. */
+var drag=null;
+var ZONES=[{key:"pool",box:"zonePool"},{key:"n",box:"zoneN"},{key:"g",box:"zoneG"}];
+function zoneEls(){
+  return ZONES.map(function(z){
+    var box=byId(z.box);
+    return {key:z.key, el:box?box.parentNode:null};   /* .chips sits directly in .zone */
+  });
+}
+function focusChip(pid){
+  var c=document.querySelector('.chip[data-pid="'+pid+'"]');
+  if(c) c.focus();
+}
+function clearOver(){
+  zoneEls().forEach(function(z){ if(z.el) z.el.classList.remove("over"); });
+}
+function zoneAt(x,y){
+  var hit=null;
+  zoneEls().forEach(function(z){
+    if(!z.el) return;
+    var r=z.el.getBoundingClientRect();
+    if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom) hit=z;
+  });
+  return hit;
+}
+function endDrag(commitZone){
+  if(!drag) return;
+  if(drag.ghost&&drag.ghost.parentNode) drag.ghost.parentNode.removeChild(drag.ghost);
+  drag.chip.classList.remove("dragging");
+  clearOver();
+  var pid=drag.pid, moved=drag.moved;
+  drag=null;
+  if(commitZone){
+    teamDraft[pid]=commitZone==="pool"?null:commitZone;
+    renderTeams();
+  }else if(!moved){
+    cycleSide(pid);         /* a tap, not a drag */
+  }
+}
+function cycleSide(pid){
+  var t=teamDraft[pid];
+  teamDraft[pid]=t===null?"n":(t==="n"?"g":null);
+  renderTeams();
+}
+function startDrag(e,pid,chip){
+  drag={pid:pid, chip:chip, id:e.pointerId, moved:false,
+        sx:e.clientX, sy:e.clientY, ghost:null};
+  try{ chip.setPointerCapture(e.pointerId); }catch(err){}
+}
+function moveDrag(e){
+  if(!drag||e.pointerId!==drag.id) return;
+  var dx=e.clientX-drag.sx, dy=e.clientY-drag.sy;
+  if(!drag.moved){
+    if(Math.abs(dx)<8&&Math.abs(dy)<8) return;   /* below threshold: still a tap */
+    drag.moved=true;
+    var g=drag.chip.cloneNode(true);
+    g.classList.add("ghost");
+    g.classList.remove("dragging");
+    g.style.width=drag.chip.offsetWidth+"px";
+    document.body.appendChild(g);
+    drag.ghost=g;
+    drag.ox=drag.chip.offsetWidth/2;
+    drag.oy=drag.chip.offsetHeight/2;
+    drag.chip.classList.add("dragging");
+  }
+  drag.ghost.style.left=(e.clientX-drag.ox)+"px";
+  drag.ghost.style.top=(e.clientY-drag.oy)+"px";
+  clearOver();
+  var z=zoneAt(e.clientX,e.clientY);
+  if(z&&z.el) z.el.classList.add("over");
+}
+function upDrag(e){
+  if(!drag||e.pointerId!==drag.id) return;
+  var z=drag.moved?zoneAt(e.clientX,e.clientY):null;
+  endDrag(z?z.key:null);
+}
+
+function renderTeams(){
+  var editable=!state.locked&&!readOnly&&!saving;
+  function sums(t,key){
+    return P.reduce(function(s,p){ return teamDraft[p.id]===t?s+p[key]:s; },0);
+  }
+  var gn=sums("n","hcp"), gg=sums("g","hcp");
+  var cn=sideCount(teamDraft,"n"), cg=sideCount(teamDraft,"g");
+  var pool=P.filter(function(p){ return !teamDraft[p.id]; });
+  byId("balN").textContent=String(gn);
+  byId("balG").textContent=String(gg);
+  byId("balNs").textContent=cn+" players";
+  byId("balGs").textContent=cg+" players";
+  byId("balGap").textContent=String(Math.abs(gn-gg));
+  var tt=byId("teamTag");
+  tt.textContent=cn+" v "+cg;
+  tt.className="tag"+(evenSides(teamDraft)?"":" bad");
+  byId("zcPool").textContent=String(pool.length);
+  function count(id,c){
+    var e2=byId(id);
+    e2.textContent=c+" / "+SIDE_SIZE;
+    e2.className="zc"+(c===SIDE_SIZE?"":" bad");
+  }
+  count("zcN",cn); count("zcG",cg);
+
+  function chipFor(p){
+    var side=teamDraft[p.id];
+    var b=el("button","chip "+(side||""));
+    b.type="button";
+    b.draggable=false;
+    b.disabled=!editable;
+    b.setAttribute("data-pid",p.id);
+    b.appendChild(document.createTextNode(p.name));
+    b.appendChild(el("i",null,String(p.str)));
+    b.setAttribute("aria-label",p.name+", handicap "+p.hcp+", "+
+      (side?"on "+TEAM[side]:"unassigned")+". Arrow left or right to move.");
+    if(editable){
+      b.addEventListener("pointerdown",function(e){
+        if(e.button&&e.button!==0) return;
+        e.preventDefault();
+        startDrag(e,p.id,b);
+      });
+      b.addEventListener("keydown",function(e){
+        var k=e.key;
+        if(k==="ArrowLeft"){ e.preventDefault(); teamDraft[p.id]="n"; renderTeams(); focusChip(p.id); }
+        else if(k==="ArrowRight"){ e.preventDefault(); teamDraft[p.id]="g"; renderTeams(); focusChip(p.id); }
+        else if(k==="ArrowUp"||k==="Backspace"||k==="Delete"){ e.preventDefault(); teamDraft[p.id]=null; renderTeams(); focusChip(p.id); }
+        else if(k===" "||k==="Enter"){ e.preventDefault(); cycleSide(p.id); focusChip(p.id); }
+      });
+    }
+    return b;
+  }
+  function fill(boxId,players,emptyText){
+    var box=byId(boxId);
+    box.textContent="";
+    if(!players.length){ box.appendChild(el("span","zempty",emptyText)); return; }
+    players.forEach(function(p){ box.appendChild(chipFor(p)); });
+  }
+  var byIndex=function(a,b){ return a.hcp-b.hcp||a.name.localeCompare(b.name); };
+  fill("zonePool",pool.sort(byIndex),"everyone is on a side");
+  fill("zoneN",P.filter(function(p){ return teamDraft[p.id]==="n"; }).sort(byIndex),"drop names here");
+  fill("zoneG",P.filter(function(p){ return teamDraft[p.id]==="g"; }).sort(byIndex),"drop names here");
+
+  var dirty=teamDraftDirty();
+  /* an uneven split can't seat four 2v2 tee times, so it never gets published —
+     finish both halves of a swap in the draft first */
+  byId("saveTeamsBtn").disabled=!editable||!dirty||!evenSides(teamDraft);
+  byId("revertTeamsBtn").disabled=!editable||!dirty;
+  byId("balanceBtn").disabled=!editable;
+  byId("rerollBtn").disabled=!editable;
+  byId("clearTeamsBtn").disabled=!editable;
+  byId("lockBtn").disabled=readOnly||saving;
+  byId("lockBtn").textContent=state.locked?"Unlock":"Lock";
+  byId("lockBanner").hidden=!state.locked;
+  byId("rescoreBanner").hidden=!(dirty&&anyScores());
+  byId("roBanner2").hidden=!readOnly;
+  byId("teamFlag").hidden=!(dirty||!evenSides(state.teams));
+
+  var tm=byId("teamMsg");
+  if(readOnly) tm.textContent="View only on this device.";
+  else if(state.locked) tm.textContent="Locked.";
+  else if(!evenSides(teamDraft)) tm.textContent="Needs "+SIDE_SIZE+" a side.";
+  else if(dirty) tm.textContent="Unsaved on this device.";
+  else tm.textContent="Everyone is seeing these sides.";
+}
+
+/* ---------- tee time editor ---------- */
+function slotDraftDirty(){
+  for(var i=0;i<NSLOT;i++) if(slotDraft[i]!==state.slots[i]) return true;
+  return false;
+}
+function renderTeeSetup(){
+  byId("teeSetupCard").hidden=!teeSetupOpen;
+  byId("editTeeBtn").textContent=teeSetupOpen?"Hide tee time editor":"Edit tee times";
+  if(!teeSetupOpen) return;
+
+  var even=evenSides(state.teams);
+  var editable=!state.locked&&!readOnly&&!saving&&even;
+  byId("lockBannerTee").hidden=!state.locked;
+  byId("unevenBanner").hidden=even;
+  byId("slotTag").textContent=assignedCount(slotDraft)+" of 16 placed";
+
+  var wrap=byId("setupMatches");
+  wrap.textContent="";
+  matchesOf(slotDraft).forEach(function(m,mi){
+    var box=el("div","sm"), h=el("div","sm-h");
+    h.appendChild(el("b",null,"Match "+m.no));
+    h.appendChild(el("span","tag",teeTime(m.no-1)));
+    box.appendChild(h);
+    for(var k=0;k<4;k++){
+      (function(k){
+        var idx=mi*4+k, side=slotTeam(idx);
+        var row=el("div","slot "+side);
+        row.appendChild(el("span","sl",TEAM[side]));
+        var sel=document.createElement("select");
+        sel.disabled=!editable;
+        sel.setAttribute("aria-label","Match "+m.no+" "+TEAM[side]+" player "+((k%2)+1));
+        var blank=document.createElement("option");
+        blank.value=""; blank.textContent="— open —";
+        sel.appendChild(blank);
+        /* only players actually on this side can fill this seat */
+        roster(side).forEach(function(p){
+          var o=document.createElement("option");
+          o.value=p.id;
+          var at=slotDraft.indexOf(p.id);
+          o.textContent=p.name+"  ("+p.str+")"+
+            (at>=0&&at!==idx?"  → M"+(slotMatch(at)+1):"");
+          sel.appendChild(o);
+        });
+        sel.value=slotDraft[idx]||"";
+        sel.addEventListener("change",function(){
+          var pid=sel.value||null;
+          if(pid){
+            var prev=slotDraft.indexOf(pid), cur=slotDraft[idx];
+            slotDraft[idx]=pid;
+            if(prev>=0&&prev!==idx) slotDraft[prev]=cur;
+          }else slotDraft[idx]=null;
+          renderTeeSetup();
+        });
+        row.appendChild(sel);
+        box.appendChild(row);
+      })(k);
+    }
+    var foot=el("div","mfoot");
+    function cell(label,ids){
+      var d=el("div");
+      d.appendChild(document.createTextNode(label));
+      d.appendChild(el("b",null,ids.length<2?"—":("+"+ids.reduce(function(a,i){return a+BY[i].str;},0))));
+      return d;
+    }
+    foot.appendChild(cell(TEAM.n,m.n));
+    foot.appendChild(cell(TEAM.g,m.g));
+    box.appendChild(foot);
+    wrap.appendChild(box);
+  });
+
+  var dirty=slotDraftDirty();
+  byId("saveSlotsBtn").disabled=!editable||!dirty;
+  byId("revertSlotsBtn").disabled=!editable||!dirty;
+  byId("autoPairBtn").disabled=!editable;
+  byId("clearSlotsBtn").disabled=!editable;
+
+  var tm=byId("teeMsg");
+  if(readOnly) tm.textContent="View only on this device.";
+  else if(state.locked) tm.textContent="Locked.";
+  else if(!even) tm.textContent="Set the sides first.";
+  else if(dirty) tm.textContent="Unsaved on this device.";
+  else tm.textContent="Everyone is seeing these tee times.";
+}
+
+/* ---------- the draw ---------- */
+function renderDraw(){
+  var wrap=byId("drawList");
+  wrap.textContent="";
+  matchesOf(state.slots).forEach(function(m,mi){
+    var row=el("div","drow");
+    var t=el("div","dtime");
+    t.appendChild(el("span",null,"Match "+m.no));
+    t.appendChild(document.createTextNode(teeTime(mi)));
+    row.appendChild(t);
+    var nm=el("div","dnames");
+    function side(ids,cls){
+      var s=el("span",cls, ids.length?ids.map(function(i){ return shortName(BY[i].name); }).join(" / "):"open");
+      return s;
+    }
+    nm.appendChild(side(m.n,"t1"));
+    nm.appendChild(el("span","vs","v"));
+    nm.appendChild(side(m.g,"t2"));
+    row.appendChild(nm);
+    wrap.appendChild(row);
+  });
+  byId("drawTag").textContent="The draw · first off "+teeTime(0);
+}
+
+/* ---------- hole-by-hole scoring ---------- */
+var ITEM=34, WMIN=1, WMAX=14;
+var sheetOpen=false, sheetReturn=null, sheetSolo=null;
+var group=(function(){
+  var v=null;
+  try{ v=localStorage.getItem(GKEY); }catch(e){}
+  var n=parseInt(v,10);
+  return (n>=1&&n<=4)?n:1;
+})();
+var curHole=0;
+
+function groupIds(){
+  if(sheetSolo) return {m:null, ids:[sheetSolo]};
+  var m=matchesOf(state.slots)[group-1];
+  return {m:m, ids:m.n.concat(m.g)};
+}
+function holeDirty(h){
+  return P.some(function(p){ return isEdited(p.id,h); });
+}
+function renderHoleStrip(){
+  var strip=byId("holeStrip");
+  strip.textContent="";
+  var g=groupIds();
+  for(var h=0;h<18;h++){
+    (function(h){
+      var done=g.ids.length&&g.ids.every(function(id){ return state.gross[id][h]!==null; });
+      var b=el("button","hs",String(h+1));
+      b.type="button";
+      b.setAttribute("data-done",done?"1":"0");
+      if(holeDirty(h)) b.setAttribute("data-dirty","1");
+      if(h===curHole) b.setAttribute("aria-current","true");
+      b.setAttribute("aria-label","Hole "+(h+1)+(done?", posted":""));
+      b.addEventListener("click",function(){ gotoHole(h,0); });
+      strip.appendChild(b);
+    })(h);
+  }
+  var cur=strip.children[curHole];
+  if(cur&&cur.scrollIntoView) cur.scrollIntoView({block:"nearest",inline:"center"});
+}
+
+function wheelFor(p){
+  var wrap=el("div","wheelwrap");
+  wrap.appendChild(el("div","wheelband"));
+  var w=el("div","wheel");
+  w.setAttribute("data-pid",p.id);
+  w.setAttribute("role","spinbutton");
+  w.setAttribute("aria-label","Gross score for "+p.name+" on hole "+(curHole+1));
+  w.tabIndex=readOnly?-1:0;
+  if(readOnly) w.setAttribute("aria-disabled","true");
+  var track=el("div","wtrack");
+  var vals=[null];
+  for(var v=WMIN;v<=WMAX;v++) vals.push(v);
+  vals.forEach(function(v,i){
+    var b=el("button","wv"+(v!==null&&v<=PAR[curHole]-1?" bird":""));
+    b.type="button";
+    b.textContent=v===null?"–":String(v);
+    b.setAttribute("data-v",v===null?"":String(v));
+    b.setAttribute("data-i",String(i));
+    b.tabIndex=-1;
+    b.addEventListener("click",function(){ setWheel(w,i,true); });
+    track.appendChild(b);
+  });
+  w.appendChild(track);
+  wrap.appendChild(w);
+
+  var cur=state.gross[p.id][curHole];
+  var idx=cur===null?0:(cur-WMIN+1);
+  w._idx=idx;
+  paintWheel(w,idx);
+
+  if(!readOnly){
+    var t=null;
+    w.addEventListener("scroll",function(){
+      if(w._sync) return;
+      if(t) clearTimeout(t);
+      t=setTimeout(function(){
+        var i=Math.max(0,Math.min(WMAX-WMIN+1,Math.round(w.scrollTop/ITEM)));
+        setWheel(w,i,false);
+      },110);
+    });
+    w.addEventListener("keydown",function(e){
+      var d=0;
+      if(e.key==="ArrowUp") d=-1;
+      else if(e.key==="ArrowDown") d=1;
+      else return;
+      e.preventDefault();
+      setWheel(w,Math.max(0,Math.min(WMAX-WMIN+1,w._idx+d)),true);
+    });
+  }
+  return wrap;
+}
+function paintWheel(w,idx){
+  Array.prototype.forEach.call(w.querySelectorAll(".wv"),function(b){
+    b.setAttribute("data-sel",(+b.getAttribute("data-i")===idx)?"1":"0");
+  });
+  var pid=w.getAttribute("data-pid");
+  if(w.parentNode&&w.parentNode.classList) w.parentNode.classList.toggle("dirty",isEdited(pid,curHole));
+  var v=idx===0?null:(idx-1+WMIN);
+  w.setAttribute("aria-valuenow",v===null?"":String(v));
+  w.setAttribute("aria-valuetext",v===null?"no score":String(v));
+}
+function setWheel(w,idx,scrollThere){
+  var pid=w.getAttribute("data-pid");
+  var v=idx===0?null:(idx-1+WMIN);
+  w._idx=idx;
+  if(scrollThere){
+    w._sync=true;
+    w.scrollTo?w.scrollTo({top:idx*ITEM,behavior:"smooth"}):(w.scrollTop=idx*ITEM);
+    setTimeout(function(){ w._sync=false; },260);
+  }
+  if(state.gross[pid][curHole]!==v){
+    state.gross[pid][curHole]=v;
+    var cell=document.querySelector('.s[data-pid="'+pid+'"][data-hole="'+curHole+'"]');
+    if(cell) paintCell(cell);
+    refreshRow(pid);
+    refreshHeader();
+    refreshSaveBar();
+    refreshHoleMeta();
+  }
+  paintWheel(w,idx);
+  updatePlayMeta(pid);
+}
+function updatePlayMeta(pid){
+  var m=document.querySelector('[data-playmeta="'+pid+'"]');
+  if(!m) return;
+  var p=BY[pid], v=state.gross[pid][curHole];
+  m.textContent="";
+  m.appendChild(document.createTextNode("hcp "+p.str+" · "));
+  if(strokeOn(p,curHole)) m.appendChild(el("span","strk","● stroke"));
+  else m.appendChild(document.createTextNode("no stroke"));
+  if(v!==null) m.appendChild(el("span","net","net "+(v-strokeOn(p,curHole))));
+}
+
+/* Park every wheel on its saved value. Must run while the panel is actually
+   visible — setting scrollTop on a display:none element silently does nothing,
+   which left the wheels reading blank when the tab opened. */
+function syncWheels(){
+  var box=byId("playRows");
+  if(!box||!box.offsetParent) return false;
+  Array.prototype.forEach.call(box.querySelectorAll(".wheel"),function(w){
+    var pid=w.getAttribute("data-pid");
+    var v=state.gross[pid][curHole];
+    var idx=v===null?0:(v-WMIN+1);
+    w._idx=idx;
+    w._sync=true;
+    w.scrollTop=idx*ITEM;
+    setTimeout(function(){ w._sync=false; },140);
+    paintWheel(w,idx);
+  });
+  return true;
+}
+function scheduleWheelSync(){
+  if(!sheetOpen) return;
+  requestAnimationFrame(function(){ syncWheels(); });
+}
+
+function renderHole(rebuild){
+  if(!sheetOpen) return;
+  var g=groupIds();
+  var m=g.m;
+  byId("sheetWho").textContent=m?("Match "+m.no):"Not in a tee time";
+  byId("sheetWhen").textContent=m?teeTime(m.no-1):BY[g.ids[0]].name;
+  byId("hNum").textContent="Hole "+(curHole+1);
+  byId("hInfo").textContent="Par "+PAR[curHole]+" · Index "+SI[curHole];
+  byId("hPrev").disabled=curHole===0;
+  byId("hNext").disabled=curHole===17;
+  renderHoleStrip();
+
+  if(rebuild){
+    var rows=byId("playRows");
+    rows.textContent="";
+    if(!g.ids.length){
+      rows.appendChild(el("div","dndhint","Match "+group+" has nobody in it yet — set the draw on the Teams tab."));
+    }
+    g.ids.forEach(function(id){
+      var p=BY[id];
+      var r=el("div","play "+(teamOf(id)||""));
+      var pl=el("div","pl");
+      pl.appendChild(el("b",null,p.name));
+      var meta=el("em");
+      meta.setAttribute("data-playmeta",id);
+      pl.appendChild(meta);
+      r.appendChild(pl);
+      r.appendChild(wheelFor(p));
+      rows.appendChild(r);
+      updatePlayMeta(id);
+    });
+    scheduleWheelSync();
+  }
+  refreshHoleMeta();
+}
+function openSheet(h,pid){
+  curHole=Math.max(0,Math.min(17,h));
+  var idx=state.slots.indexOf(pid);
+  if(idx>=0){
+    sheetSolo=null;
+    group=slotMatch(idx)+1;
+    try{ localStorage.setItem(GKEY,String(group)); }catch(e){}
+  }else{
+    sheetSolo=pid;         /* scoring somebody who is in no tee time */
+  }
+  sheetReturn=document.activeElement;
+  sheetOpen=true;
+  byId("holeSheet").hidden=false;
+  document.body.style.overflow="hidden";
+  msg("holeMsg","","");
+  renderHole(true);
+  byId("sheetPanel").focus();
+}
+function closeSheet(){
+  if(!sheetOpen) return;
+  sheetOpen=false; sheetSolo=null;
+  byId("holeSheet").hidden=true;
+  document.body.style.overflow="";
+  if(sheetReturn&&sheetReturn.focus) sheetReturn.focus();
+  sheetReturn=null;
+}
+
+function refreshHoleMeta(){
+  if(!sheetOpen) return;
+  var n=editCount();
+  var c=byId("holeCnt");
+  c.textContent="";
+  if(readOnly){ c.textContent="View only on this device."; }
+  else if(n){
+    c.appendChild(el("b",null,String(n)));
+    c.appendChild(document.createTextNode(" unsaved"));
+  }else{
+    c.textContent="Scroll a wheel to set a score.";
+  }
+  byId("holeDiscard").disabled=!n||saving;
+  var nx=byId("holeNext");
+  nx.disabled=saving||(readOnly&&curHole===17);
+  var last=curHole===17;
+  nx.textContent=saving?"Posting…":
+    (n&&!readOnly?("Post "+n+(last?" & close":" & next")):(last?"Close":"Next hole"));
+  nx.disabled=saving;
+  Array.prototype.forEach.call(byId("holeStrip").querySelectorAll(".hs"),function(b,i){
+    if(holeDirty(i)) b.setAttribute("data-dirty","1"); else b.removeAttribute("data-dirty");
+  });
+}
+function gotoHole(h,dir){
+  if(h<0||h>17) return;
+  curHole=h;
+  renderHole(true);
+  if(dir){
+    var pr=byId("playRows");
+    pr.classList.remove("slidein-l","slidein-r");
+    void pr.offsetWidth;
+    pr.classList.add(dir>0?"slidein-l":"slidein-r");
+  }
+}
+
+function renderSub(){
+  var editable=!state.locked&&!readOnly&&!saving;
+  var nm=byId("subName"), hc=byId("subHcp");
+  if(document.activeElement!==nm) nm.value=state.sub.name;
+  if(document.activeElement!==hc) hc.value=String(state.sub.hcp);
+  nm.disabled=!editable; hc.disabled=!editable;
+  byId("saveSubBtn").disabled=!editable;
+  var tag=byId("subTag");
+  tag.textContent=subNamed()?(state.sub.name+" · "+state.sub.hcp):"open · playing off "+state.sub.hcp;
+  tag.className="tag"+(subNamed()?"":" bad");
+}
+
+function render(){
+  var c=refreshHeader();
+  renderBoard(c);
+  renderTeeGrid();
+  refreshSaveBar();
+  renderDraw();
+  if(sheetOpen) renderHole(true);
+  renderSub();
+  renderTeams();
+  renderTeeSetup();
+}
+
+function msg(id,text,kind){
+  var m=byId(id);
+  m.textContent=text;
+  m.className="msg"+(kind?" "+kind:"");
+}
+function setReadOnly(){
+  readOnly=true;
+  byId("roBanner").hidden=false;
+  repaintAll();
+  refreshSaveBar();
+  renderHole(true);
+  renderSub();
+  renderTeams();
+  renderTeeSetup();
+}
+
+/* ---------- live sync ---------- */
+var FB=null, online=false, everSynced=false;
+
+function setConn(state2){
+  var el2=byId("statusNote");
+  if(!el2) return;
+  el2.textContent=state2;
+}
+
+function commit(patch,msgId){
+  if(!FB){
+    msg(msgId,"Not connected \u2014 these scores are only on this phone. Reload when you have signal.","err");
+    return;
+  }
+  saving=true;
+  refreshSaveBar(); refreshHoleMeta(); renderSub(); renderTeams(); renderTeeSetup();
+  msg(msgId,"Saving\u2026","");
+
+  /* One flat multi-path update. Two groups posting different holes touch
+     different paths, so they cannot overwrite each other. */
+  var up={};
+  if(patch.cells){
+    patch.cells.forEach(function(c){ up["gross/"+c.pid+"/"+c.hole]=c.val; });
+  }
+  if(patch.teams){
+    P.forEach(function(p){ up["teams/"+p.id]=patch.teams[p.id]||null; });
+  }
+  if(patch.slots){
+    for(var i=0;i<NSLOT;i++) up["slots/"+i]=patch.slots[i]||null;
+  }
+  if(typeof patch.locked==="boolean") up["locked"]=patch.locked;
+  if(patch.sub){ up["sub/name"]=patch.sub.name; up["sub/hcp"]=patch.sub.hcp; }
+
+  FB.update(up).then(function(){
+    saving=false; snapshotSaved();
+    repaintAll(); refreshSaveBar(); renderHole(true); renderSub(); renderTeams(); renderTeeSetup();
+    msg(msgId,"Saved. Every phone is updating.","ok");
+  },function(err){
+    saving=false;
+    refreshSaveBar(); refreshHoleMeta(); renderSub(); renderTeams(); renderTeeSetup();
+    msg(msgId,"Could not save \u2014 "+((err&&err.message)||"unknown error")+
+      ". Your entries are still on screen; try again.","err");
+  });
+}
+
+/* A remote change must not discard what this phone has typed but not posted. */
+function onRemote(raw){
+  var mine=editList();
+  var teamsDirty=teamDraftDirty(), slotsDirty=slotDraftDirty();
+  applyRemote(raw);
+  snapshotSaved();
+  mine.forEach(function(c){
+    if(state.gross[c.pid]) state.gross[c.pid][c.hole]=c.val;
+  });
+  if(!teamsDirty) P.forEach(function(p){ teamDraft[p.id]=state.teams[p.id]; });
+  if(!slotsDirty) slotDraft=state.slots.slice();
+  everSynced=true;
+  render();
+}
+
+function resyncDrafts(){
+  P.forEach(function(p){ teamDraft[p.id]=state.teams[p.id]; });
+  slotDraft=state.slots.slice();
+}
+
+/* ---------- wiring ---------- */
+var TABS=["board","tee","teams"];
+function showTab(k){
+  TABS.forEach(function(j){
+    var on=j===k;
+    byId("tab-"+j).setAttribute("aria-selected",on?"true":"false");
+    byId("p-"+j).hidden=!on;
+  });
+  if(k==="board") renderBoard(compute());
+}
+TABS.forEach(function(k){ byId("tab-"+k).addEventListener("click",function(){ showTab(k); }); });
+
+byId("saveBtn").addEventListener("click",function(){
+  if(saving||readOnly) return;
+  var cells=editList();
+  if(cells.length) commit({cells:cells},"saveMsg");
+});
+byId("discardBtn").addEventListener("click",function(){
+  if(saving) return;
+  P.forEach(function(p){ state.gross[p.id]=savedGross[p.id].slice(); });
+  repaintAll(); refreshHeader(); refreshSaveBar();
+  msg("saveMsg","Unsaved changes discarded.","");
+});
+
+/* teams tab actions */
+byId("balanceBtn").addEventListener("click",function(){
+  teamDraft=balancedTeams(false); renderTeams();
+  msg("balMsg","Auto-balanced. Save to push the sides to everyone.","");
+});
+byId("rerollBtn").addEventListener("click",function(){
+  teamDraft=balancedTeams(true); renderTeams();
+  msg("balMsg","Re-rolled to a different split at similar balance.","");
+});
+byId("clearTeamsBtn").addEventListener("click",function(){
+  P.forEach(function(p){ teamDraft[p.id]=null; });
+  renderTeams();
+  msg("balMsg","Cleared. Put all sixteen on a side, or auto-balance.","");
+});
+byId("revertTeamsBtn").addEventListener("click",function(){
+  P.forEach(function(p){ teamDraft[p.id]=state.teams[p.id]; });
+  renderTeams();
+  msg("balMsg","Reverted to the saved sides.","");
+});
+byId("saveTeamsBtn").addEventListener("click",function(){
+  if(saving||readOnly||state.locked||!teamDraftDirty()||!evenSides(teamDraft)) return;
+  var before=assignedCount(state.slots);
+  P.forEach(function(p){ state.teams[p.id]=teamDraft[p.id]; });
+  state.slots=reconcile(state.slots,state.teams);
+  slotDraft=state.slots.slice();
+  var lost=before-assignedCount(state.slots);
+  render();
+  commit({teams:JSON.parse(JSON.stringify(state.teams)),slots:state.slots.slice()},"teamMsg");
+  if(lost>0){
+    msg("balMsg",lost+" tee time seat"+(lost===1?"":"s")+
+      " cleared because those players changed sides — rebuild them on the Tee Times tab.","err");
+  }
+});
+byId("lockBtn").addEventListener("click",function(){
+  if(saving||readOnly) return;
+  state.locked=!state.locked;
+  if(state.locked) resyncDrafts();
+  render();
+  commit({locked:state.locked},"teamMsg");
+});
+
+byId("sheetPanel").tabIndex=-1;
+byId("sheetClose").addEventListener("click",closeSheet);
+byId("sheetBackdrop").addEventListener("click",closeSheet);
+document.addEventListener("keydown",function(e){
+  if(!sheetOpen) return;
+  if(e.key==="Escape"){ e.preventDefault(); closeSheet(); }
+  else if(e.key==="ArrowLeft"&&e.target===byId("sheetPanel")){ e.preventDefault(); gotoHole(curHole-1,-1); }
+  else if(e.key==="ArrowRight"&&e.target===byId("sheetPanel")){ e.preventDefault(); gotoHole(curHole+1,1); }
+});
+byId("hPrev").addEventListener("click",function(){ gotoHole(curHole-1,-1); });
+byId("hNext").addEventListener("click",function(){ gotoHole(curHole+1,1); });
+
+byId("holeDiscard").addEventListener("click",function(){
+  if(saving) return;
+  P.forEach(function(p){ state.gross[p.id]=savedGross[p.id].slice(); });
+  repaintAll(); refreshHeader(); refreshSaveBar(); renderHole(true);
+  msg("holeMsg","Unsaved changes discarded.","");
+});
+byId("holeNext").addEventListener("click",function(){
+  if(saving) return;
+  var cells=editList();
+  if(cells.length&&!readOnly) commit({cells:cells},"holeMsg");
+  if(curHole<17) gotoHole(curHole+1,1); else closeSheet();
+});
+
+/* swipe left/right to change hole. touch-action:pan-y on the card leaves vertical
+   panning to the browser (page scroll, and the wheels' own scrolling) and hands us
+   the horizontal axis. */
+(function(){
+  var card=byId("holeSwipe"), sw=null;
+  card.addEventListener("pointerdown",function(e){
+    if(drag) return;
+    sw={x:e.clientX,y:e.clientY,id:e.pointerId,fired:false};
+  });
+  card.addEventListener("pointermove",function(e){
+    if(!sw||sw.fired||e.pointerId!==sw.id) return;
+    var dx=e.clientX-sw.x, dy=e.clientY-sw.y;
+    if(Math.abs(dx)>44&&Math.abs(dx)>Math.abs(dy)*1.3){
+      sw.fired=true;
+      gotoHole(curHole+(dx<0?1:-1),dx<0?1:-1);
+    }
+  });
+  card.addEventListener("pointerup",function(){ sw=null; });
+  card.addEventListener("pointercancel",function(){ sw=null; });
+})();
+
+byId("saveSubBtn").addEventListener("click",function(){
+  if(saving||readOnly||state.locked) return;
+  var nm=byId("subName").value.trim().slice(0,28);
+  var hv=parseInt(byId("subHcp").value,10);
+  if(!isFinite(hv)||hv<0||hv>40){
+    msg("subMsg","Handicap must be a whole number between 0 and 40.","err");
+    return;
+  }
+  if(nm===state.sub.name&&hv===state.sub.hcp){
+    msg("subMsg","Nothing changed.","");
+    return;
+  }
+  state.sub={name:nm,hcp:hv};
+  applySub();
+  render();
+  commit({sub:{name:nm,hcp:hv}},"subMsg");
+});
+
+/* drag listeners live on the document so a drag survives leaving the chip,
+   with or without working pointer capture */
+document.addEventListener("pointermove",moveDrag);
+document.addEventListener("pointerup",upDrag);
+document.addEventListener("pointercancel",function(e){
+  if(drag&&e.pointerId===drag.id) endDrag(null);
+});
+
+/* tee time editor actions */
+byId("editTeeBtn").addEventListener("click",function(){
+  teeSetupOpen=!teeSetupOpen;
+  renderTeeSetup();
+  if(teeSetupOpen) byId("teeSetupCard").scrollIntoView({block:"nearest"});
+});
+byId("autoPairBtn").addEventListener("click",function(){
+  if(!evenSides(state.teams)) return;
+  slotDraft=pairedSlots(state.teams); renderTeeSetup();
+  msg("pairMsg","Paired. Save to push the tee times to everyone.","");
+});
+byId("clearSlotsBtn").addEventListener("click",function(){
+  slotDraft=[]; for(var i=0;i<NSLOT;i++) slotDraft.push(null);
+  renderTeeSetup();
+  msg("pairMsg","All seats emptied.","");
+});
+byId("revertSlotsBtn").addEventListener("click",function(){
+  slotDraft=state.slots.slice(); renderTeeSetup();
+  msg("pairMsg","Reverted to the saved tee times.","");
+});
+byId("saveSlotsBtn").addEventListener("click",function(){
+  if(saving||readOnly||state.locked||!slotDraftDirty()) return;
+  state.slots=reconcile(slotDraft.slice(),state.teams);
+  slotDraft=state.slots.slice();
+  render();
+  commit({slots:state.slots.slice()},"teeMsg");
+});
+
+render();
+if(!evenSides(state.teams)){
+  showTab("teams");
+}else if(assignedCount(state.slots)<NSLOT){
+  teeSetupOpen=true;
+  showTab("tee");
+  renderTeeSetup();
+}
+
+/* ---------- boot ---------- */
+window.__shootout={
+  onRemote:onRemote,
+  attach:function(api){
+    FB=api;
+    setConn("Live");
+  },
+  conn:function(up){
+    online=up;
+    setConn(up?(everSynced?"Live":"Live"):"Offline");
+    if(!up) setConn("Offline");
+  },
+  seed:function(){ return {teams:DEFAULT_STATE.teams,slots:DEFAULT_STATE.slots,
+                           locked:false,sub:{name:"",hcp:12}}; },
+  fail:function(m){
+    setConn("Offline");
+    msg("holeMsg","Could not reach the scoreboard \u2014 "+m,"err");
+  }
+};
+})();
+</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getDatabase, ref, onValue, update, get }
+  from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+
+const CONFIG = null;
+const ROOM = "shootout";
+const S = window.__shootout;
+
+if (!CONFIG) {
+  S.fail("this copy of the site has no database configured yet.");
+} else {
+  try {
+    const app = initializeApp(CONFIG);
+    const db  = getDatabase(app);
+    const room = ref(db, ROOM);
+
+    // seed the room once, the first time anybody opens it
+    const snap = await get(room);
+    if (!snap.exists()) await update(room, S.seed());
+
+    S.attach({ update: (paths) => update(room, paths) });
+    onValue(ref(db, ".info/connected"), (s) => S.conn(s.val() === true));
+    onValue(room, (s) => S.onRemote(s.val()), (e) => S.fail(e.message));
+  } catch (e) {
+    S.fail(e.message);
+  }
+}
+</script>
+</body>
+</html>

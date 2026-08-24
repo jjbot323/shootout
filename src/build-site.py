@@ -1,0 +1,268 @@
+"""Derive the standalone website from template.html.
+
+The artifact build keeps its state inside the page and republishes the whole
+document. A real site can't work that way, so this swaps that layer for a
+Firebase Realtime Database: per-hole writes (no whole-document conflicts) and a
+live listener so every phone updates within a fraction of a second.
+"""
+import io, os, re, sys, json
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+SRC  = os.path.join(HERE, "template.html")
+OUT  = os.path.join(HERE, "..", "index.html")
+CFG  = os.path.join(HERE, "firebase-config.json")
+
+s = io.open(SRC, encoding="utf-8").read()
+
+def cut(a, b, label):
+    """remove the region from the start of a to the start of b"""
+    global s
+    i = s.index(a); j = s.index(b)
+    assert i < j, label
+    s = s[:i] + s[j:]
+
+def sub(a, b, label, count=1):
+    global s
+    assert s.count(a) >= 1, "MISSING: " + label
+    s = s.replace(a, b, count)
+
+# ---------------------------------------------------------------- head/meta
+sub('<title>Sixteen Man Shootout</title>',
+    '<title>Sixteen Man Shootout</title>\n'
+    '<meta name="description" content="Live net better-ball scoring for a 16-player one-round match.">\n'
+    '<meta name="theme-color" content="#0E211C">\n'
+    '<link rel="icon" href="data:image/svg+xml,'
+    '%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E'
+    '%3Ctext y=%2726%27 font-size=%2726%27%3E%E2%9B%B3%3C/text%3E%3C/svg%3E">',
+    "head meta")
+
+# the page no longer carries its own state, and no longer copies its own source
+cut('<script id="state" type="application/json">%%STATE%%</script>\n', '\n<header class="board">', "state block")
+cut('<script id="src" type="text/plain">%%SRC%%</script>\n', '<script>\n(function(){', "src block")
+
+# ---------------------------------------------------------------- live badge
+sub('<span id="statusNote">Live</span>',
+    '<span id="statusNote">Live</span>', "status note")
+sub('<div class="lead-note" id="leadNote">No scores in yet.</div>',
+    '<div class="lead-note" id="leadNote">Connecting…</div>', "lead note")
+
+# ---------------------------------------------------------------- state init
+old_state_start = s.index('var state=(function(){')
+old_state_end   = s.index('function teamOf(pid){')
+sub(s[old_state_start:old_state_end], '''var DEFAULT_STATE={
+  teams:DEFAULT_TEAMS,
+  slots:DEFAULT_SLOTS,
+  locked:false,
+  sub:{name:"",hcp:12},
+  gross:{}
+};
+function blankGross(){
+  var g={};
+  P.forEach(function(p){
+    var row=[];
+    for(var h=0;h<18;h++) row.push(null);
+    g[p.id]=row;
+  });
+  return g;
+}
+var state={v:4,teams:{},slots:[],locked:false,sub:{name:"",hcp:12},gross:blankGross()};
+P.forEach(function(p){ state.teams[p.id]=DEFAULT_TEAMS[p.id]||null; });
+for(var _i=0;_i<NSLOT;_i++) state.slots.push(DEFAULT_SLOTS[_i]||null);
+
+/* push the open seat's name and handicap onto the roster entry, so every display
+   and every stroke calculation picks them up with no special-casing */
+function applySub(){
+  BY[SUB_ID].name=state.sub.name||"TBD";
+  BY[SUB_ID].hcp=state.sub.hcp;
+  applyHcp();
+}
+applySub();
+function subNamed(){ return !!state.sub.name; }
+
+/* Fold a Realtime Database snapshot into local state. Firebase drops null
+   entries and turns sparse arrays into objects, so both shapes are handled. */
+function applyRemote(raw){
+  raw=raw||{};
+  var t=raw.teams||{};
+  P.forEach(function(p){
+    var v=t[p.id];
+    state.teams[p.id]=(v==="n"||v==="g")?v:null;
+  });
+  var sl=raw.slots||{};
+  for(var i=0;i<NSLOT;i++){
+    var id=Array.isArray(sl)?sl[i]:sl[String(i)];
+    state.slots[i]=(typeof id==="string"&&BY[id])?id:null;
+  }
+  state.slots=reconcile(state.slots,state.teams);
+  state.locked=raw.locked===true;
+  var sb=raw.sub||{};
+  state.sub={
+    name:typeof sb.name==="string"?sb.name.trim().slice(0,28):"",
+    hcp:(typeof sb.hcp==="number"&&isFinite(sb.hcp))?Math.max(0,Math.min(40,Math.round(sb.hcp))):12
+  };
+  var g=raw.gross||{};
+  P.forEach(function(p){
+    var row=g[p.id]||{}, out=[];
+    for(var h=0;h<18;h++){
+      var v=Array.isArray(row)?row[h]:row[String(h)];
+      out.push((typeof v==="number"&&isFinite(v)&&v>0)?Math.round(v):null);
+    }
+    state.gross[p.id]=out;
+  });
+  applySub();
+}
+
+''', "state initialiser")
+
+# ---------------------------------------------------------------- sync layer
+old_pub_start = s.index('/* ---------- publish ---------- */')
+old_pub_end   = s.index('/* ---------- wiring ---------- */')
+sub(s[old_pub_start:old_pub_end], '''/* ---------- live sync ---------- */
+var FB=null, online=false, everSynced=false;
+
+function setConn(state2){
+  var el2=byId("statusNote");
+  if(!el2) return;
+  el2.textContent=state2;
+}
+
+function commit(patch,msgId){
+  if(!FB){
+    msg(msgId,"Not connected \\u2014 these scores are only on this phone. Reload when you have signal.","err");
+    return;
+  }
+  saving=true;
+  refreshSaveBar(); refreshHoleMeta(); renderSub(); renderTeams(); renderTeeSetup();
+  msg(msgId,"Saving\\u2026","");
+
+  /* One flat multi-path update. Two groups posting different holes touch
+     different paths, so they cannot overwrite each other. */
+  var up={};
+  if(patch.cells){
+    patch.cells.forEach(function(c){ up["gross/"+c.pid+"/"+c.hole]=c.val; });
+  }
+  if(patch.teams){
+    P.forEach(function(p){ up["teams/"+p.id]=patch.teams[p.id]||null; });
+  }
+  if(patch.slots){
+    for(var i=0;i<NSLOT;i++) up["slots/"+i]=patch.slots[i]||null;
+  }
+  if(typeof patch.locked==="boolean") up["locked"]=patch.locked;
+  if(patch.sub){ up["sub/name"]=patch.sub.name; up["sub/hcp"]=patch.sub.hcp; }
+
+  FB.update(up).then(function(){
+    saving=false; snapshotSaved();
+    repaintAll(); refreshSaveBar(); renderHole(true); renderSub(); renderTeams(); renderTeeSetup();
+    msg(msgId,"Saved. Every phone is updating.","ok");
+  },function(err){
+    saving=false;
+    refreshSaveBar(); refreshHoleMeta(); renderSub(); renderTeams(); renderTeeSetup();
+    msg(msgId,"Could not save \\u2014 "+((err&&err.message)||"unknown error")+
+      ". Your entries are still on screen; try again.","err");
+  });
+}
+
+/* A remote change must not discard what this phone has typed but not posted. */
+function onRemote(raw){
+  var mine=editList();
+  var teamsDirty=teamDraftDirty(), slotsDirty=slotDraftDirty();
+  applyRemote(raw);
+  snapshotSaved();
+  mine.forEach(function(c){
+    if(state.gross[c.pid]) state.gross[c.pid][c.hole]=c.val;
+  });
+  if(!teamsDirty) P.forEach(function(p){ teamDraft[p.id]=state.teams[p.id]; });
+  if(!slotsDirty) slotDraft=state.slots.slice();
+  everSynced=true;
+  render();
+}
+
+function resyncDrafts(){
+  P.forEach(function(p){ teamDraft[p.id]=state.teams[p.id]; });
+  slotDraft=state.slots.slice();
+}
+
+''', "publish -> sync")
+
+# ---------------------------------------------------------------- boot
+old_boot = s[s.index('if(typeof claude!=="undefined"'):s.index('})();\n</script>')]
+sub(old_boot, '''/* ---------- boot ---------- */
+window.__shootout={
+  onRemote:onRemote,
+  attach:function(api){
+    FB=api;
+    setConn("Live");
+  },
+  conn:function(up){
+    online=up;
+    setConn(up?(everSynced?"Live":"Live"):"Offline");
+    if(!up) setConn("Offline");
+  },
+  seed:function(){ return {teams:DEFAULT_STATE.teams,slots:DEFAULT_STATE.slots,
+                           locked:false,sub:{name:"",hcp:12}}; },
+  fail:function(m){
+    setConn("Offline");
+    msg("holeMsg","Could not reach the scoreboard \\u2014 "+m,"err");
+  }
+};
+''', "boot block")
+
+# ---------------------------------------------------------------- firebase glue
+cfg = None
+if os.path.exists(CFG):
+    cfg = json.load(io.open(CFG, encoding="utf-8"))
+
+cfg_js = json.dumps(cfg, indent=2) if cfg else "null"
+
+glue = '''
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getDatabase, ref, onValue, update, get }
+  from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+
+const CONFIG = %s;
+const ROOM = "shootout";
+const S = window.__shootout;
+
+if (!CONFIG) {
+  S.fail("this copy of the site has no database configured yet.");
+} else {
+  try {
+    const app = initializeApp(CONFIG);
+    const db  = getDatabase(app);
+    const room = ref(db, ROOM);
+
+    // seed the room once, the first time anybody opens it
+    const snap = await get(room);
+    if (!snap.exists()) await update(room, S.seed());
+
+    S.attach({ update: (paths) => update(room, paths) });
+    onValue(ref(db, ".info/connected"), (s) => S.conn(s.val() === true));
+    onValue(room, (s) => S.onRemote(s.val()), (e) => S.fail(e.message));
+  } catch (e) {
+    S.fail(e.message);
+  }
+}
+</script>
+''' % cfg_js
+
+sub('</body>\n</html>', glue + '</body>\n</html>', "firebase glue")
+
+# ---------------------------------------------------------------- checks
+assert '%%STATE%%' not in s and '%%SRC%%' not in s, "template markers must be gone"
+assert 'claude.use' not in s, "artifact API must be gone"
+assert 'sessionStorage' not in s, "pending-replay machinery must be gone"
+assert 'buildPage' not in s, "self-publish must be gone"
+assert s.count('</' + 'script>') == 2, "expected two scripts, got %d" % s.count('</' + 'script>')
+
+d = 0
+css = s[s.index('<style>') + 7:s.index('</style>')]
+for ch in css:
+    if ch == '{': d += 1
+    elif ch == '}': d -= 1
+assert d == 0, "unbalanced CSS braces: %d" % d
+
+os.makedirs(os.path.dirname(OUT), exist_ok=True)
+io.open(OUT, "w", encoding="utf-8", newline="").write(s)
+print("wrote %s  (%.1f KB)" % (OUT, len(s.encode("utf-8")) / 1024.0))
+print("firebase config: %s" % ("embedded" if cfg else "NOT SET (drop firebase-config.json next to this script)"))

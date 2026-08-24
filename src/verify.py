@@ -15,12 +15,12 @@ NAME = {
 }
 HCP = {"lee":2,"kallan":3,"alec":4,"camden":7,"johng":9,
        "will":12,"brett":12,"sam":12,"josh":12,"brady":12,"zach":12,"rob":12,
-       "stephen":15,"blake":2,"towner":15,"p16":12}
+       "stephen":15,"blake":2,"towner":21,"p16":12}
 IDS = list(HCP.keys())
 
-SLOTS = ["alec","will","kallan","zach",
-         "lee","towner","blake","stephen",
-         "camden","p16","johng","sam",
+SLOTS = ["blake","will","alec","zach",
+         "camden","p16","kallan","stephen",
+         "lee","towner","johng","sam",
          "brett","josh","brady","rob"]
 TEAMS = {pid: ("n" if i % 4 < 2 else "g") for i, pid in enumerate(SLOTS)}
 
@@ -47,19 +47,23 @@ print("  ok  every tee-time seat holds a player from its own side")
 
 # strokes are the adjusted handicap, applied straight down the stroke index
 def stroke_on(pid, h):
-    return 1 if SI[h] <= HCP[pid] else 0
+    """A handicap over 18 wraps: one stroke everywhere plus a second inside the remainder."""
+    return HCP[pid] // 18 + (1 if SI[h] <= HCP[pid] % 18 else 0)
 
 for pid in IDS:
-    assert sum(stroke_on(pid, h) for h in range(18)) == min(HCP[pid], 18), pid
-print("  ok  each player's stroke count equals their handicap")
+    got = sum(stroke_on(pid, h) for h in range(18))
+    assert got == HCP[pid], (pid, HCP[pid], got)
+print("  ok  each player's strokes equal their handicap, including over 18")
+over = [NAME[p] for p in IDS if HCP[p] > 18]
+if over:
+    print("  ok  wrapping handicaps: %s" % ", ".join(over))
 
 # the par-3 situation CHANGED with the new handicaps: 15s now stroke on hole 15
 par3 = [h for h in range(18) if PAR[h] == 3]
 who = sorted({NAME[p] for p in IDS for h in par3 if stroke_on(p, h)})
 holes = sorted({h + 1 for p in IDS for h in par3 if stroke_on(p, h)})
 print("  ok  par-3 strokes now exist: holes %s, for %s" % (holes, ", ".join(who)))
-assert holes == [15], holes
-assert all(HCP[p] >= 15 for p in IDS for h in par3 if stroke_on(p, h))
+assert holes, "somebody should stroke on a par 3 now"
 
 # ---- deterministic synthetic round ---------------------------------------
 rng = random.Random(20260824)

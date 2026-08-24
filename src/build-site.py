@@ -53,7 +53,7 @@ sub(s[old_state_start:old_state_end], '''var DEFAULT_STATE={
   teams:DEFAULT_TEAMS,
   slots:DEFAULT_SLOTS,
   locked:false,
-  sub:{name:"",hcp:12},
+  roster:{},
   gross:{}
 };
 function blankGross(){
@@ -65,19 +65,23 @@ function blankGross(){
   });
   return g;
 }
-var state={v:4,teams:{},slots:[],locked:false,sub:{name:"",hcp:12},gross:blankGross()};
+var state={v:5,teams:{},slots:[],locked:false,roster:{},gross:blankGross()};
 P.forEach(function(p){ state.teams[p.id]=DEFAULT_TEAMS[p.id]||null; });
 for(var _i=0;_i<NSLOT;_i++) state.slots.push(DEFAULT_SLOTS[_i]||null);
 
-/* push the open seat's name and handicap onto the roster entry, so every display
-   and every stroke calculation picks them up with no special-casing */
-function applySub(){
-  BY[SUB_ID].name=state.sub.name||"TBD";
-  BY[SUB_ID].hcp=state.sub.hcp;
+/* Names and handicaps are editable, so the built-in roster is only a default.
+   Whatever is stored wins, per player, and strokes are recomputed from it. */
+var BASE={};
+P.forEach(function(p){ BASE[p.id]={name:p.name,hcp:p.hcp}; });
+function applyRoster(){
+  P.forEach(function(p){
+    var o=state.roster[p.id]||{};
+    p.name=(typeof o.name==="string"&&o.name.trim())?o.name.trim().slice(0,28):BASE[p.id].name;
+    p.hcp=(typeof o.hcp==="number"&&isFinite(o.hcp))?Math.max(0,Math.min(40,Math.round(o.hcp))):BASE[p.id].hcp;
+  });
   applyHcp();
 }
-applySub();
-function subNamed(){ return !!state.sub.name; }
+applyRoster();
 
 /* Fold a Realtime Database snapshot into local state. Firebase drops null
    entries and turns sparse arrays into objects, so both shapes are handled. */
@@ -95,11 +99,14 @@ function applyRemote(raw){
   }
   state.slots=reconcile(state.slots,state.teams);
   state.locked=raw.locked===true;
-  var sb=raw.sub||{};
-  state.sub={
-    name:typeof sb.name==="string"?sb.name.trim().slice(0,28):"",
-    hcp:(typeof sb.hcp==="number"&&isFinite(sb.hcp))?Math.max(0,Math.min(40,Math.round(sb.hcp))):12
-  };
+  var rr=raw.roster||{};
+  state.roster={};
+  P.forEach(function(p){
+    var o=rr[p.id];
+    if(o&&typeof o==="object") state.roster[p.id]={name:o.name,hcp:o.hcp};
+  });
+  if(!raw.roster&&raw.sub&&typeof raw.sub==="object")
+    state.roster.p16={name:raw.sub.name,hcp:raw.sub.hcp};
   var g=raw.gross||{};
   P.forEach(function(p){
     var row=g[p.id]||{}, out=[];
@@ -109,7 +116,7 @@ function applyRemote(raw){
     }
     state.gross[p.id]=out;
   });
-  applySub();
+  applyRoster();
 }
 
 ''', "state initialiser")
@@ -132,7 +139,7 @@ function commit(patch,msgId){
     return;
   }
   saving=true;
-  refreshSaveBar(); refreshHoleMeta(); renderSub(); renderTeams(); renderTeeSetup();
+  refreshSaveBar(); refreshHoleMeta(); renderRoster(); renderTeams(); renderTeeSetup();
   msg(msgId,"Saving\\u2026","");
 
   /* One flat multi-path update. Two groups posting different holes touch
@@ -148,15 +155,22 @@ function commit(patch,msgId){
     for(var i=0;i<NSLOT;i++) up["slots/"+i]=patch.slots[i]||null;
   }
   if(typeof patch.locked==="boolean") up["locked"]=patch.locked;
-  if(patch.sub){ up["sub/name"]=patch.sub.name; up["sub/hcp"]=patch.sub.hcp; }
+  if(patch.roster){
+    P.forEach(function(p){
+      var o=patch.roster[p.id];
+      if(!o) return;
+      up["roster/"+p.id+"/name"]=o.name;
+      up["roster/"+p.id+"/hcp"]=o.hcp;
+    });
+  }
 
   FB.update(up).then(function(){
     saving=false; snapshotSaved();
-    repaintAll(); refreshSaveBar(); renderHole(true); renderSub(); renderTeams(); renderTeeSetup();
+    repaintAll(); refreshSaveBar(); renderHole(true); renderRoster(); renderTeams(); renderTeeSetup();
     msg(msgId,"Saved. Every phone is updating.","ok");
   },function(err){
     saving=false;
-    refreshSaveBar(); refreshHoleMeta(); renderSub(); renderTeams(); renderTeeSetup();
+    refreshSaveBar(); refreshHoleMeta(); renderRoster(); renderTeams(); renderTeeSetup();
     msg(msgId,"Could not save \\u2014 "+((err&&err.message)||"unknown error")+
       ". Your entries are still on screen; try again.","err");
   });
@@ -199,7 +213,7 @@ window.__shootout={
     if(!up) setConn("Offline");
   },
   seed:function(){ return {teams:DEFAULT_STATE.teams,slots:DEFAULT_STATE.slots,
-                           locked:false,sub:{name:"",hcp:12}}; },
+                           locked:false}; },
   fail:function(m){
     setConn("Offline");
     msg("holeMsg","Could not reach the scoreboard \\u2014 "+m,"err");

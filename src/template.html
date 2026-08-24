@@ -49,7 +49,7 @@ button{font:inherit; color:inherit; cursor:pointer}
 h1,h2,h3{text-wrap:balance; margin:0}
 p{margin:0}
 
-.board{position:sticky; top:0; z-index:30; background:var(--board); color:var(--board-ink); border-bottom:1px solid var(--board-line)}
+.board{background:var(--board); color:var(--board-ink); border-bottom:1px solid var(--board-line)}
 .board-in{max-width:1100px; margin:0 auto; padding:12px 16px 0}
 .board-top{display:flex; align-items:baseline; justify-content:flex-end; gap:12px; font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--board-dim); min-height:14px}
 .board-score{display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:10px; padding:6px 0 12px}
@@ -65,7 +65,8 @@ p{margin:0}
 .lead-note strong{color:var(--board-ink); font-weight:600}
 
 .tabs{
-  position:sticky; top:0; z-index:29; background:var(--card); border-bottom:1px solid var(--line);
+  position:sticky; top:0; z-index:40; background:var(--card);
+  border-bottom:1px solid var(--line); box-shadow:0 1px 0 var(--line),0 4px 12px -8px var(--scrim);
   overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;
 }
 .tabs::-webkit-scrollbar{display:none}
@@ -148,6 +149,7 @@ table{border-collapse:collapse; width:100%}
 .tee .tot{background:var(--card-2); font-weight:600; min-width:42px}
 .tee td.hole{padding:0; position:relative; height:38px; min-width:38px}
 .tee td.hole.strk::before{content:""; position:absolute; top:3px; right:3px; width:4px; height:4px; border-radius:50%; background:var(--red); opacity:.85; pointer-events:none}
+.tee td.hole[data-strokes="2"]::after{content:""; position:absolute; top:3px; right:9px; width:4px; height:4px; border-radius:50%; background:var(--red); opacity:.85; pointer-events:none}
 .tee .s{
   width:100%; height:38px; border:1.5px solid transparent; border-radius:3px; background:none;
   color:var(--ink); font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:16px;
@@ -379,7 +381,14 @@ table{border-collapse:collapse; width:100%}
 }
 .zempty{font-size:11.5px; color:var(--ink-3); font-style:italic; padding:2px 2px 6px; font-weight:400}
 .dndhint{font-size:12px; color:var(--ink-3); padding:0 14px 12px; line-height:1.5}
-.subrow{display:flex; gap:9px; align-items:flex-end; flex-wrap:wrap}
+.rlist{display:grid}
+.rrow{display:grid; grid-template-columns:1fr 78px; gap:8px; align-items:center; padding:7px 14px; border-bottom:1px solid var(--line-2)}
+.rrow:last-child{border-bottom:0}
+.rrow input{height:42px; border:1px solid var(--line); border-radius:5px; background:var(--card); color:var(--ink); font-family:inherit; font-size:16px; padding:0 9px; min-width:0}
+.rrow .rhcp{font-family:var(--mono); text-align:center; padding:0}
+.rrow input:disabled{opacity:.6; cursor:default}
+.rrow.changed input{border-color:var(--dirty); background:var(--dirty-bg)}
+.rrow input::-webkit-outer-spin-button,.rrow input::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
 .subrow label{
   display:grid; gap:4px; font-size:10px; letter-spacing:.12em; text-transform:uppercase;
   font-weight:700; color:var(--ink-3);
@@ -444,11 +453,11 @@ footer{max-width:1100px; margin:0 auto; padding:4px 16px 40px; font-size:11.5px;
 <main>
   <div class="panel" id="p-board" role="tabpanel" aria-labelledby="tab-board">
     <div class="card">
-      <div class="card-h"><h2>Individual board</h2><span class="tag">Strokes to par</span></div>
+      <div class="card-h"><h2>Individual board</h2></div>
       <div class="card-b flush"><div class="scroller"><table class="ind" id="indBoard"></table></div></div>
     </div>
     <div class="card">
-      <div class="card-h"><h2>Point ledger</h2><span class="tag" id="ledgerTag"></span></div>
+      <div class="card-h"><h2>Point ledger</h2></div>
       <div class="card-b flush"><table class="ledger" id="ledger"></table></div>
     </div>
   </div>
@@ -518,17 +527,16 @@ footer{max-width:1100px; margin:0 auto; padding:4px 16px 40px; font-size:11.5px;
       <b>Scores are already posted.</b> Moving players recalculates every match and point from the same scorecards.
     </div>
     <div class="card">
-      <div class="card-h"><h2>The sixteenth player</h2><span class="tag" id="subTag">open</span></div>
-      <div class="card-b">
-        <div class="subrow">
-          <label>Name<input id="subName" type="text" maxlength="28" placeholder="TBD" autocomplete="off"></label>
-          <label>Handicap<input id="subHcp" type="number" inputmode="numeric" min="0" max="40" step="1"></label>
-          <button class="btn sm" id="saveSubBtn">Save</button>
-        </div>
-        <p class="dndhint" style="padding:10px 0 0">Fill this in when you find your sixteenth. The name and handicap flow through the sides, the tee times and the scorecard &mdash; anything already posted against the open seat carries over.</p>
+      <div class="card-h"><h2>Players</h2><span class="tag" id="rosterTag"></span></div>
+      <div class="card-b flush"><div class="rlist" id="rosterList"></div></div>
+      <div class="savebar static">
+        <span class="cnt" id="rosterMsg"></span>
+        <button class="btn ghost sm" id="revertRosterBtn">Revert</button>
+        <button class="btn sm" id="saveRosterBtn">Save players</button>
       </div>
-      <div class="msg" id="subMsg"></div>
+      <div class="msg" id="rosterHint">Type over any name or handicap. Above 18 gives a second stroke on the lowest-index holes.</div>
     </div>
+
     <div class="card">
       <div class="card-h"><h2>The two sides</h2><span class="tag" id="teamTag"></span></div>
       <div class="card-b">
@@ -626,10 +634,9 @@ var P=[
   {id:"rob",     name:"Rob Wallace",        hcp:12},
   {id:"stephen", name:"Stephen Wheatcroft", hcp:15},
   {id:"blake",   name:"Blake Clifton",     hcp:2},
-  {id:"towner",  name:"Towner Webster",     hcp:15},
+  {id:"towner",  name:"Towner Webster",     hcp:21},
   {id:"p16",     name:"TBD",                hcp:12}
 ];
-var SUB_ID="p16";                 /* the open sixteenth seat, named from the page */
 var BY={}; P.forEach(function(p){BY[p.id]=p;});
 /* strokes ARE the adjusted handicap — nobody is normalised to scratch */
 function applyHcp(){ P.forEach(function(p){ p.str=p.hcp; }); }
@@ -649,12 +656,12 @@ function teeTime(m){
 }
 
 var DEFAULT_TEAMS={
-  alec:"n", will:"n", lee:"n", towner:"n", camden:"n", p16:"n", brett:"n", josh:"n",
-  kallan:"g", zach:"g", blake:"g", stephen:"g", johng:"g", sam:"g", brady:"g", rob:"g"
+  blake:"n", will:"n", camden:"n", p16:"n", lee:"n", towner:"n", brett:"n", josh:"n",
+  alec:"g", zach:"g", kallan:"g", stephen:"g", johng:"g", sam:"g", brady:"g", rob:"g"
 };
-var DEFAULT_SLOTS=["alec","will","kallan","zach",
-                   "lee","towner","blake","stephen",
-                   "camden","p16","johng","sam",
+var DEFAULT_SLOTS=["blake","will","alec","zach",
+                   "camden","p16","kallan","stephen",
+                   "lee","towner","johng","sam",
                    "brett","josh","brady","rob"];
 
 /* tee-time slot layout: match m holds 4m..4m+3 — first two are Team 1, last two Team 2 */
@@ -712,23 +719,32 @@ var state=(function(){
     var id=rawSlots[i];
     slots.push(typeof id==="string"&&BY[id]?id:null);
   }
-  var sub=raw.sub&&typeof raw.sub==="object"?raw.sub:{};
-  var sname=typeof sub.name==="string"?sub.name.trim().slice(0,28):"";
-  var shcp=(typeof sub.hcp==="number"&&isFinite(sub.hcp))?Math.max(0,Math.min(40,Math.round(sub.hcp))):BY[SUB_ID].hcp;
+  var rr=raw.roster&&typeof raw.roster==="object"?raw.roster:{};
+  var roster={};
+  P.forEach(function(p){
+    var o=rr[p.id];
+    if(o&&typeof o==="object") roster[p.id]={name:o.name,hcp:o.hcp};
+  });
+  /* an older save carried only the spare seat, under `sub` */
+  if(!raw.roster&&raw.sub&&typeof raw.sub==="object") roster.p16={name:raw.sub.name,hcp:raw.sub.hcp};
 
-  return {v:4, teams:teams, slots:reconcile(slots,teams), locked:raw.locked===true,
-          sub:{name:sname,hcp:shcp}, gross:gross};
+  return {v:5, teams:teams, slots:reconcile(slots,teams), locked:raw.locked===true,
+          roster:roster, gross:gross};
 })();
 
-/* push the open seat's saved name and handicap onto the roster entry, so every
-   display and every stroke calculation picks them up with no special-casing */
-function applySub(){
-  BY[SUB_ID].name=state.sub.name||"TBD";
-  BY[SUB_ID].hcp=state.sub.hcp;
+/* Names and handicaps are editable, so the built-in roster is only a default.
+   Whatever is stored wins, per player, and strokes are recomputed from it. */
+var BASE={};
+P.forEach(function(p){ BASE[p.id]={name:p.name,hcp:p.hcp}; });
+function applyRoster(){
+  P.forEach(function(p){
+    var o=state.roster[p.id]||{};
+    p.name=(typeof o.name==="string"&&o.name.trim())?o.name.trim().slice(0,28):BASE[p.id].name;
+    p.hcp=(typeof o.hcp==="number"&&isFinite(o.hcp))?Math.max(0,Math.min(40,Math.round(o.hcp))):BASE[p.id].hcp;
+  });
   applyHcp();
 }
-applySub();
-function subNamed(){ return !!state.sub.name; }
+applyRoster();
 
 function teamOf(pid){ return state.teams[pid]||null; }
 function roster(t){ return P.filter(function(p){ return state.teams[p.id]===t; }); }
@@ -749,7 +765,12 @@ function matchesOf(slots){
 }
 function assignedCount(slots){ return slots.filter(Boolean).length; }
 
-function strokeOn(p,h){ return SI[h]<=p.str?1:0; }
+/* A handicap over 18 wraps: one stroke on every hole, plus a second on the
+   holes whose index falls inside the remainder. Returns a COUNT, not a flag. */
+function strokeOn(p,h){
+  var full=Math.floor(p.str/18), rest=p.str%18;
+  return full+(SI[h]<=rest?1:0);
+}
 function netAt(pid,h){
   var v=state.gross[pid][h];
   return v===null?null:v-strokeOn(BY[pid],h);
@@ -982,7 +1003,6 @@ function renderLedger(c){
   tr.appendChild(el("td",null,"Awarded · "+fmt(c.awarded)+" of 26"));
   tr.appendChild(el("td","pt "+(c.pts[1]>c.pts[0]?"g":"z"),fmt(c.pts[1])));
   tf.appendChild(tr); t.appendChild(tf);
-  byId("ledgerTag").textContent=c.allDone?"final":"net agg "+c.aggAllN+"–"+c.aggAllG;
 }
 
 function renderInd(c){
@@ -1145,7 +1165,9 @@ function renderTeeGrid(){
       tr.appendChild(c2);
       for(var h=0;h<18;h++){
         (function(h){
-          var td=el("td","hole"+(strokeOn(p,h)?" strk":""));
+          var st=strokeOn(p,h);
+          var td=el("td","hole"+(st?" strk":""));
+          if(st>1) td.setAttribute("data-strokes","2");
           var v=state.gross[p.id][h];
           var b2=el("button","s "+shapeFor(v,h)+(isEdited(p.id,h)?" edit":""));
           b2.type="button";
@@ -1153,7 +1175,7 @@ function renderTeeGrid(){
           b2.setAttribute("data-hole",String(h));
           b2.textContent=v===null?"":String(v);
           b2.setAttribute("aria-label",p.name+", hole "+(h+1)+", par "+PAR[h]+
-            (v===null?", no score":", "+v)+(strokeOn(p,h)?", gets a stroke":"")+
+            (v===null?", no score":", "+v)+(st?(st>1?", gets two strokes":", gets a stroke"):"")+
             ". Opens the score pad.");
           b2.addEventListener("click",function(){ openSheet(h,p.id); });
           td.appendChild(b2);
@@ -1588,10 +1610,11 @@ function updatePlayMeta(pid){
   if(!m) return;
   var p=BY[pid], v=state.gross[pid][curHole];
   m.textContent="";
-  m.appendChild(document.createTextNode("hcp "+p.str+" · "));
-  if(strokeOn(p,curHole)) m.appendChild(el("span","strk","● stroke"));
+  var st=strokeOn(p,curHole);
+  if(st>1) m.appendChild(el("span","strk","●● two strokes"));
+  else if(st===1) m.appendChild(el("span","strk","● stroke"));
   else m.appendChild(document.createTextNode("no stroke"));
-  if(v!==null) m.appendChild(el("span","net","net "+(v-strokeOn(p,curHole))));
+  if(v!==null) m.appendChild(el("span","net","net "+(v-st)));
 }
 
 /* Park every wheel on its saved value. Must run while the panel is actually
@@ -1741,16 +1764,72 @@ function gotoHole(h,dir){
   }
 }
 
-function renderSub(){
+var rosterDraft={};
+function seedRosterDraft(){
+  rosterDraft={};
+  P.forEach(function(p){ rosterDraft[p.id]={name:p.name,hcp:p.hcp}; });
+}
+seedRosterDraft();
+function rosterDirty(){
+  return P.some(function(p){
+    var d=rosterDraft[p.id];
+    return !d||d.name!==p.name||d.hcp!==p.hcp;
+  });
+}
+function rosterBadCount(){
+  return P.filter(function(p){
+    var h=rosterDraft[p.id]&&rosterDraft[p.id].hcp;
+    return !(typeof h==="number"&&isFinite(h)&&h>=0&&h<=40);
+  }).length;
+}
+function markRoster(){
+  var dirty=rosterDirty(), editable=!state.locked&&!readOnly&&!saving, bad=rosterBadCount();
+  byId("saveRosterBtn").disabled=!editable||!dirty||bad>0;
+  byId("revertRosterBtn").disabled=!editable||!dirty;
+  byId("rosterTag").textContent=P.length+" players";
+  var m=byId("rosterMsg");
+  if(readOnly) m.textContent="View only on this device.";
+  else if(state.locked) m.textContent="Locked.";
+  else if(bad) m.textContent="Handicaps must be 0 to 40.";
+  else if(dirty) m.textContent="Unsaved on this device.";
+  else m.textContent="Everyone is seeing this roster.";
+}
+function renderRoster(){
   var editable=!state.locked&&!readOnly&&!saving;
-  var nm=byId("subName"), hc=byId("subHcp");
-  if(document.activeElement!==nm) nm.value=state.sub.name;
-  if(document.activeElement!==hc) hc.value=String(state.sub.hcp);
-  nm.disabled=!editable; hc.disabled=!editable;
-  byId("saveSubBtn").disabled=!editable;
-  var tag=byId("subTag");
-  tag.textContent=subNamed()?(state.sub.name+" · "+state.sub.hcp):"open · playing off "+state.sub.hcp;
-  tag.className="tag"+(subNamed()?"":" bad");
+  var list=byId("rosterList");
+  var focus=document.activeElement;
+  var keep=(focus&&focus.getAttribute)?focus.getAttribute("data-rid"):null;
+  list.textContent="";
+  P.slice().sort(function(a,b){ return a.hcp-b.hcp||a.name.localeCompare(b.name); })
+   .forEach(function(p){
+    var d=rosterDraft[p.id]||{name:p.name,hcp:p.hcp};
+    var row=el("div","rrow"+((d.name!==p.name||d.hcp!==p.hcp)?" changed":""));
+    var nm=document.createElement("input");
+    nm.type="text"; nm.maxLength=28; nm.value=d.name; nm.autocomplete="off";
+    nm.setAttribute("data-rid",p.id+":name");
+    nm.setAttribute("aria-label","Name for "+p.name);
+    nm.disabled=!editable;
+    nm.addEventListener("input",function(){ rosterDraft[p.id].name=nm.value; row.className="rrow changed"; markRoster(); });
+    var hc=document.createElement("input");
+    hc.type="number"; hc.className="rhcp"; hc.min="0"; hc.max="40"; hc.step="1";
+    hc.inputMode="numeric"; hc.value=String(d.hcp);
+    hc.setAttribute("data-rid",p.id+":hcp");
+    hc.setAttribute("aria-label","Handicap for "+p.name);
+    hc.disabled=!editable;
+    hc.addEventListener("input",function(){
+      var v=parseInt(hc.value,10);
+      rosterDraft[p.id].hcp=isFinite(v)?v:hc.value;
+      row.className="rrow changed";
+      markRoster();
+    });
+    row.appendChild(nm); row.appendChild(hc);
+    list.appendChild(row);
+  });
+  if(keep){
+    var back=list.querySelector('[data-rid="'+keep+'"]');
+    if(back) back.focus();
+  }
+  markRoster();
 }
 
 function render(){
@@ -1760,7 +1839,7 @@ function render(){
   refreshSaveBar();
   renderDraw();
   if(sheetOpen) renderHole(true);
-  renderSub();
+  renderRoster();
   renderTeams();
   renderTeeSetup();
 }
@@ -1776,7 +1855,7 @@ function setReadOnly(){
   repaintAll();
   refreshSaveBar();
   renderHole(true);
-  renderSub();
+  renderRoster();
   renderTeams();
   renderTeeSetup();
 }
@@ -1794,12 +1873,12 @@ function buildPage(){
 function commit(patch,msgId,attempt){
   attempt=attempt||0;
   if(!api){ setReadOnly(); return; }
-  saving=true; refreshSaveBar(); refreshHoleMeta(); renderSub(); renderTeams(); renderTeeSetup(); msg(msgId,"Saving…","");
+  saving=true; refreshSaveBar(); refreshHoleMeta(); renderRoster(); renderTeams(); renderTeeSetup(); msg(msgId,"Saving…","");
   try{ sessionStorage.setItem(PKEY,JSON.stringify({patch:patch,msgId:msgId})); }catch(e){}
   api.publish(buildPage()).then(function(){
     try{ sessionStorage.removeItem(PKEY); sessionStorage.removeItem(TKEY); }catch(e){}
     saving=false; snapshotSaved();
-    repaintAll(); refreshSaveBar(); renderHole(true); renderSub(); renderTeams(); renderTeeSetup();
+    repaintAll(); refreshSaveBar(); renderHole(true); renderRoster(); renderTeams(); renderTeeSetup();
     msg(msgId,"Saved. Every device is updating.","ok");
   },function(err){
     var code=err&&err.code;
@@ -1818,7 +1897,7 @@ function commit(patch,msgId,attempt){
       return;
     }
     try{ sessionStorage.removeItem(PKEY); }catch(e){}
-    refreshSaveBar(); refreshHoleMeta(); renderSub(); renderTeams(); renderTeeSetup();
+    refreshSaveBar(); refreshHoleMeta(); renderRoster(); renderTeams(); renderTeeSetup();
     msg(msgId,"Could not save — "+((err&&err.message)||"unknown error")+". Your changes are still on screen; try again.","err");
   });
 }
@@ -1854,10 +1933,18 @@ function replayPending(){
     }
   }
   if(typeof patch.locked==="boolean"&&state.locked!==patch.locked){ state.locked=patch.locked; need=true; }
-  if(patch.sub&&(state.sub.name!==patch.sub.name||state.sub.hcp!==patch.sub.hcp)){
-    state.sub={name:patch.sub.name,hcp:patch.sub.hcp};
-    applySub();
-    need=true;
+  if(patch.roster){
+    var touched=false;
+    P.forEach(function(p){
+      var o=patch.roster[p.id];
+      if(!o) return;
+      var cur=state.roster[p.id]||{};
+      if(cur.name!==o.name||cur.hcp!==o.hcp){
+        state.roster[p.id]={name:o.name,hcp:o.hcp};
+        touched=true;
+      }
+    });
+    if(touched){ applyRoster(); seedRosterDraft(); need=true; }
   }
   if(need) state.slots=reconcile(state.slots,state.teams);
   if(!need){
@@ -1992,22 +2079,24 @@ byId("holeNext").addEventListener("click",function(){
   card.addEventListener("pointercancel",function(){ sw=null; });
 })();
 
-byId("saveSubBtn").addEventListener("click",function(){
-  if(saving||readOnly||state.locked) return;
-  var nm=byId("subName").value.trim().slice(0,28);
-  var hv=parseInt(byId("subHcp").value,10);
-  if(!isFinite(hv)||hv<0||hv>40){
-    msg("subMsg","Handicap must be a whole number between 0 and 40.","err");
-    return;
-  }
-  if(nm===state.sub.name&&hv===state.sub.hcp){
-    msg("subMsg","Nothing changed.","");
-    return;
-  }
-  state.sub={name:nm,hcp:hv};
-  applySub();
+byId("saveRosterBtn").addEventListener("click",function(){
+  if(saving||readOnly||state.locked||!rosterDirty()) return;
+  if(rosterBadCount()){ msg("rosterHint","Handicaps must be whole numbers from 0 to 40.","err"); return; }
+  var out={};
+  P.forEach(function(p){
+    var d=rosterDraft[p.id];
+    out[p.id]={name:String(d.name||"").trim().slice(0,28)||BASE[p.id].name,
+               hcp:Math.max(0,Math.min(40,Math.round(d.hcp)))};
+  });
+  state.roster=out;
+  applyRoster();
+  seedRosterDraft();
   render();
-  commit({sub:{name:nm,hcp:hv}},"subMsg");
+  commit({roster:out},"rosterHint");
+});
+byId("revertRosterBtn").addEventListener("click",function(){
+  seedRosterDraft(); renderRoster();
+  msg("rosterHint","Reverted to the saved roster.","");
 });
 
 /* drag listeners live on the document so a drag survives leaving the chip,
@@ -2059,7 +2148,7 @@ if(typeof claude!=="undefined"&&claude&&typeof claude.use==="function"){
   claude.use("artifact").then(function(ns){
     api=ns;
     if(!api){ setReadOnly(); return; }
-    repaintAll(); refreshSaveBar(); renderHole(true); renderSub(); renderTeams(); renderTeeSetup();
+    repaintAll(); refreshSaveBar(); renderHole(true); renderRoster(); renderTeams(); renderTeeSetup();
     replayPending();
   },function(){ setReadOnly(); });
 }else{

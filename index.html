@@ -9,44 +9,55 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Ctext y=%2726%27 font-size=%2726%27%3E%E2%9B%B3%3C/text%3E%3C/svg%3E">
 <style>
 :root{
-  --paper:#EDF4FA; --card:#FFFFFF; --card-2:#F4F9FD;
-  --ink:#0F2A3D; --ink-2:#456278; --ink-3:#557489;
-  --line:#CFE1EF; --line-2:#E4EFF7;
-  --t1:#1668A8; --t1-ink:#0E4C7D; --t1-soft:#DAEBF8;
-  --band:#134B74; --band-ink:#FFFFFF;
-  --t2:#9A6208; --t2-ink:#7A4D05; --t2-soft:#FBEFD8;
-  --red:#C0392B; --good:#1B7A57; --dirty:#9A6208; --dirty-bg:#FDF6E6;
-  --board:#D7E9F7; --board-ink:#0F2A3D; --board-line:#B9D6EC; --board-dim:#456580;
-  --scrim:rgba(15,42,61,.5);
-  --focus:#1668A8;
-  --mono:ui-monospace,"SFMono-Regular","SF Mono","Cascadia Mono","Segoe UI Mono",Menlo,Consolas,monospace;
-  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  /* Augusta cream and green, ported from the masters-draft site. --brand is the
+     chrome green; --t1 happens to share it because Team 1 is the green side. */
+  --brand:#006747; --brand-dark:#004D35; --rule:#C8A951;
+  --paper:#F5F0E1; --card:#FFFFFF; --card-2:#FBF8EF;
+  --ink:#1A1A1A; --ink-2:#555555; --ink-3:#6E675E;
+  --line:#DDDDDD; --line-2:#EDE9DE; --shadow:rgba(0,0,0,.08);
+  --t1:#006747; --t1-ink:#004D35; --t1-soft:#DCEBE4;
+  --t2:#8A6D10; --t2-ink:#6B5309; --t2-soft:#F7F0D9;
+  --band:#006747; --band-ink:#FFFFFF; --btn-ink:#FFFFFF;
+  --red:#C0392B; --good:#006747; --dirty:#8A6D10; --dirty-bg:#FBF3DC;
+  --board:#006747; --board-2:#004D35; --board-ink:#FFFFFF;
+  --board-line:#004D35; --board-dim:#E8D496;
+  --board-t1:#FFFFFF; --board-t2:#E8D496;
+  --scrim:rgba(26,26,26,.55);
+  --focus:#006747;
+  --mono:"Courier New",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --sans:Georgia,"Times New Roman","Iowan Old Style",serif;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --paper:#0A1620; --card:#0F2030; --card-2:#152A3C;
-    --ink:#E6EFF6; --ink-2:#A3BACD; --ink-3:#7793A8;
-    --line:#22394C; --line-2:#1A2E3F;
-    --t1:#6BB6E8; --t1-ink:#A5D6F5; --t1-soft:#123A55;
-  --band:#16374E; --band-ink:#E6EFF6;
-    --band:#16374E; --band-ink:#E6EFF6;
-    --t2:#E0A94A; --t2-ink:#F0C97E; --t2-soft:#37290E;
-    --red:#EC7C6F; --good:#5FBE95; --dirty:#E0A94A; --dirty-bg:#2B2210;
-    --board:#071119; --board-ink:#E6EFF6; --board-line:#1B3245; --board-dim:#8AA6BB;
-    --scrim:rgba(3,10,16,.62);
-    --focus:#6BB6E8;
+    --brand:#4FB68C; --brand-dark:#00432F; --rule:#6B5A24;
+    --paper:#14140F; --card:#1D1D16; --card-2:#25251C;
+    --ink:#EDE9DE; --ink-2:#B5AFA2; --ink-3:#948E7F;
+    --line:#33332A; --line-2:#28281F; --shadow:rgba(0,0,0,.5);
+    --t1:#4FB68C; --t1-ink:#8FD9BB; --t1-soft:#0E2E22;
+    --t2:#D8B65E; --t2-ink:#E8CE8C; --t2-soft:#332B12;
+    --band:#00543A; --band-ink:#FFFFFF; --btn-ink:#0B1A12; --btn-ink:#0B1A12;
+    --red:#E8776A; --good:#4FB68C; --dirty:#D8B65E; --dirty-bg:#2E2712;
+    --board:#00432F; --board-2:#002E20; --board-ink:#FFFFFF;
+    --board-line:#002E20; --board-dim:#C8A951;
+    --board-t1:#FFFFFF; --board-t2:#DCC275;
+    --scrim:rgba(6,8,6,.64);
+    --focus:#4FB68C;
 }
 }
 :root[data-theme="dark"]{
-  --paper:#0A1620; --card:#0F2030; --card-2:#152A3C;
-  --ink:#E6EFF6; --ink-2:#A3BACD; --ink-3:#7793A8;
-  --line:#22394C; --line-2:#1A2E3F;
-  --t1:#6BB6E8; --t1-ink:#A5D6F5; --t1-soft:#123A55;
-  --t2:#E0A94A; --t2-ink:#F0C97E; --t2-soft:#37290E;
-  --red:#EC7C6F; --good:#5FBE95; --dirty:#E0A94A; --dirty-bg:#2B2210;
-  --board:#071119; --board-ink:#E6EFF6; --board-line:#1B3245; --board-dim:#8AA6BB;
-  --scrim:rgba(3,10,16,.62);
-  --focus:#6BB6E8;
+  --brand:#4FB68C; --brand-dark:#00432F; --rule:#6B5A24;
+  --paper:#14140F; --card:#1D1D16; --card-2:#25251C;
+  --ink:#EDE9DE; --ink-2:#B5AFA2; --ink-3:#948E7F;
+  --line:#33332A; --line-2:#28281F; --shadow:rgba(0,0,0,.5);
+  --t1:#4FB68C; --t1-ink:#8FD9BB; --t1-soft:#0E2E22;
+  --t2:#D8B65E; --t2-ink:#E8CE8C; --t2-soft:#332B12;
+  --band:#00543A; --band-ink:#FFFFFF;
+  --red:#E8776A; --good:#4FB68C; --dirty:#D8B65E; --dirty-bg:#2E2712;
+  --board:#00432F; --board-2:#002E20; --board-ink:#FFFFFF;
+  --board-line:#002E20; --board-dim:#C8A951;
+  --board-t1:#FFFFFF; --board-t2:#DCC275;
+  --scrim:rgba(6,8,6,.64);
+  --focus:#4FB68C;
 }
 *{box-sizing:border-box}
 body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); font-size:16px; line-height:1.5; -webkit-text-size-adjust:100%; -webkit-tap-highlight-color:transparent}
@@ -55,15 +66,19 @@ button{font:inherit; color:inherit; cursor:pointer}
 h1,h2,h3{text-wrap:balance; margin:0}
 p{margin:0}
 
-.board{background:var(--board); color:var(--board-ink); border-bottom:1px solid var(--board-line)}
+.board{
+  background:linear-gradient(135deg,var(--board),var(--board-2));
+  color:var(--board-ink); border-bottom:3px solid var(--rule);
+  box-shadow:0 4px 12px var(--shadow);
+}
 .board-in{max-width:1100px; margin:0 auto; padding:12px 16px 0}
 .board-top{display:flex; align-items:baseline; justify-content:flex-end; gap:12px; font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--board-dim); min-height:14px}
 .board-score{display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:10px; padding:6px 0 12px}
 .side{display:flex; flex-direction:column; gap:2px}
 .side.r{align-items:flex-end; text-align:right}
 .side-name{font-size:11px; letter-spacing:.14em; text-transform:uppercase; font-weight:700}
-.side.n .side-name{color:var(--t1-ink)}
-.side.g .side-name{color:var(--t2-ink)}
+.side.n .side-name{color:var(--board-t1)}
+.side.g .side-name{color:var(--board-t2)}
 .side-pts{font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:clamp(36px,12vw,54px); line-height:.9; font-weight:600; letter-spacing:-.03em}
 .board-mid{font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--board-dim); text-align:center; line-height:1.35}
 .board-mid b{display:block; font-family:var(--mono); font-size:15px; color:var(--board-ink); font-weight:600}
@@ -78,7 +93,7 @@ p{margin:0}
 .tabs::-webkit-scrollbar{display:none}
 .tabs-in{display:flex; max-width:1100px; margin:0 auto; padding:0 6px}
 .tab{background:none; border:0; padding:15px 15px 13px; white-space:nowrap; font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); border-bottom:2px solid transparent}
-.tab[aria-selected="true"]{color:var(--ink); border-bottom-color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--brand); border-bottom-color:var(--brand)}
 @media (max-width:430px){
   .tab{padding:14px 9px 12px; font-size:11px; letter-spacing:.04em}
   .tabs-in{padding:0 4px}
@@ -91,9 +106,11 @@ p{margin:0}
 
 main{max-width:1100px; margin:0 auto; padding:16px 16px 20px; display:grid; gap:16px}
 .panel{display:grid; gap:16px}
-.card{background:var(--card); border:1px solid var(--line); border-radius:6px; overflow:hidden}
-.card-h{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:11px 14px; border-bottom:1px solid var(--line-2); background:var(--card-2)}
-.card-h h2{font-size:11px; letter-spacing:.14em; text-transform:uppercase; font-weight:700; color:var(--ink-2)}
+.card{background:var(--card); border:1px solid var(--line); border-radius:8px;
+  box-shadow:0 2px 8px var(--shadow); overflow:hidden}
+.card-h{display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:11px 14px; border-bottom:2px solid var(--rule); background:var(--card-2)}
+.card-h h2{font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; font-weight:700; color:var(--brand)}
 .card-b{padding:14px}
 .card-b.flush{padding:0}
 .tag{font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); font-family:var(--mono)}
@@ -193,9 +210,10 @@ table{border-collapse:collapse; width:100%}
 .savebar.static{position:static; padding-bottom:11px}
 .savebar .cnt{font-size:12.5px; color:var(--ink-2); margin-right:auto}
 .savebar .cnt b{font-family:var(--mono)}
-.btn{border:1px solid var(--ink); background:var(--ink); color:var(--paper); border-radius:5px; padding:12px 16px; font-size:14px; font-weight:600; min-height:44px}
+.btn{border:1px solid var(--brand); background:var(--brand); color:var(--btn-ink); border-radius:6px;
+  padding:12px 16px; font-size:14px; font-weight:700; min-height:44px}
 .btn:disabled{opacity:.45; cursor:default}
-.btn.ghost{background:none; color:var(--ink); border-color:var(--line)}
+.btn.ghost{background:none; color:var(--ink-2); border-color:var(--line)}
 .btn.sm{padding:9px 13px; font-size:13px; min-height:40px}
 .msg{font-size:12.5px; color:var(--ink-3); min-height:1.35em; padding:9px 14px 13px; line-height:1.45}
 .msg.ok{color:var(--good)}
@@ -267,7 +285,7 @@ table{border-collapse:collapse; width:100%}
 .hs[data-done="1"]{background:var(--card-2); color:var(--ink-2)}
 .hs[data-done="1"]::after{content:""; position:absolute; bottom:5px; left:50%; transform:translateX(-50%); width:13px; height:2px; border-radius:1px; background:var(--good)}
 .hs[data-dirty="1"]::after{background:var(--dirty)}
-.hs[aria-current="true"]{border-color:var(--ink); box-shadow:inset 0 0 0 1px var(--ink); color:var(--ink); font-weight:700}
+.hs[aria-current="true"]{border-color:var(--brand); box-shadow:inset 0 0 0 1px var(--brand); color:var(--brand); font-weight:700}
 
 .slidewrap{position:relative}
 @media (prefers-reduced-motion:no-preference){
@@ -369,7 +387,7 @@ table{border-collapse:collapse; width:100%}
 .zone{border:1.5px dashed var(--line); border-radius:6px; background:var(--card-2); display:flex; flex-direction:column}
 .zone.n{border-color:color-mix(in srgb,var(--t1) 40%,var(--line))}
 .zone.g{border-color:color-mix(in srgb,var(--t2) 40%,var(--line))}
-.zone.over{background:var(--paper); border-style:solid; box-shadow:inset 0 0 0 2px var(--focus)}
+.zone.over{background:var(--paper); border-style:solid; box-shadow:inset 0 0 0 2px var(--brand)}
 .zone.n.over{box-shadow:inset 0 0 0 2px var(--t1)}
 .zone.g.over{box-shadow:inset 0 0 0 2px var(--t2)}
 .zhead{
@@ -403,6 +421,12 @@ table{border-collapse:collapse; width:100%}
 }
 .zempty{font-size:11.5px; color:var(--ink-3); font-style:italic; padding:2px 2px 6px; font-weight:400}
 .dndhint{font-size:12px; color:var(--ink-3); padding:0 14px 12px; line-height:1.5}
+.rhead{display:grid !important; grid-template-columns:1fr 78px; gap:8px}
+.rhead span{
+  font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; font-weight:700;
+  color:var(--brand);
+}
+.rhead span:last-child{text-align:center}
 .rlist{display:grid}
 .rrow{display:grid; grid-template-columns:1fr 78px; gap:8px; align-items:center; padding:7px 14px; border-bottom:1px solid var(--line-2)}
 .rrow:last-child{border-bottom:0}
@@ -428,9 +452,9 @@ table{border-collapse:collapse; width:100%}
 /* ---------- tee time editor ---------- */
 .setup-m{display:grid; gap:12px; padding:14px}
 @media (min-width:800px){.setup-m{grid-template-columns:1fr 1fr}}
-.sm{border:1px solid var(--line); border-radius:5px; overflow:hidden}
-.sm-h{display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:var(--card-2); border-bottom:1px solid var(--line-2)}
-.sm-h b{font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-2)}
+.tmbox{border:1px solid var(--line); border-radius:5px; overflow:hidden}
+.tmbox-h{display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:var(--card-2); border-bottom:1px solid var(--line-2)}
+.tmbox-h b{font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-2)}
 .slot{display:grid; grid-template-columns:52px 1fr; gap:9px; align-items:center; padding:7px 12px; border-bottom:1px solid var(--line-2)}
 .slot:last-of-type{border-bottom:0}
 .slot.n{box-shadow:inset 3px 0 0 var(--t1)}
@@ -548,7 +572,7 @@ footer{max-width:1100px; margin:0 auto; padding:4px 16px 40px; font-size:11.5px;
       <b>Scores are already posted.</b> Moving players recalculates every match and point from the same scorecards.
     </div>
     <div class="card">
-      <div class="card-h"><h2>Players</h2><span class="tag" id="rosterTag"></span></div>
+      <div class="card-h rhead"><span>Player</span><span>Handicap</span></div>
       <div class="card-b flush"><div class="rlist" id="rosterList"></div></div>
       <div class="savebar static">
         <span class="cnt" id="rosterMsg"></span>
@@ -1436,7 +1460,7 @@ function renderTeeSetup(){
   var wrap=byId("setupMatches");
   wrap.textContent="";
   matchesOf(slotDraft).forEach(function(m,mi){
-    var box=el("div","sm"), h=el("div","sm-h");
+    var box=el("div","tmbox"), h=el("div","tmbox-h");
     h.appendChild(el("b",null,"Match "+m.no));
     h.appendChild(el("span","tag",teeTime(m.no-1)));
     box.appendChild(h);
@@ -1834,7 +1858,6 @@ function markRoster(){
   var dirty=rosterDirty(), editable=!state.locked&&!readOnly&&!saving, bad=rosterBadCount();
   byId("saveRosterBtn").disabled=!editable||!dirty||bad>0;
   byId("revertRosterBtn").disabled=!editable||!dirty;
-  byId("rosterTag").textContent=P.length+" players";
   var m=byId("rosterMsg");
   if(readOnly) m.textContent="View only on this device.";
   else if(state.locked) m.textContent="Locked.";

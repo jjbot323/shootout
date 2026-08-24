@@ -10,18 +10,18 @@ NAME = {
     "camden":"Camden Cooper","johng":"John Gressett","will":"Will Hayward",
     "brett":"Brett Fair","sam":"Sam Brown","josh":"Josh John",
     "brady":"Brady Gayle","zach":"Zach Brantley","rob":"Rob Wallace",
-    "stephen":"Stephen Wheatcroft","cain":"Cain Cody","towner":"Towner Webster",
+    "stephen":"Stephen Wheatcroft","blake":"Blake Clifton","towner":"Towner Webster",
     "p16":"TBD",
 }
 HCP = {"lee":2,"kallan":3,"alec":4,"camden":7,"johng":9,
        "will":12,"brett":12,"sam":12,"josh":12,"brady":12,"zach":12,"rob":12,
-       "stephen":15,"cain":15,"towner":15,"p16":12}
+       "stephen":15,"blake":2,"towner":15,"p16":12}
 IDS = list(HCP.keys())
 
-SLOTS = ["alec","towner","lee","cain",
-         "camden","rob","kallan","stephen",
-         "johng","p16","will","brett",
-         "sam","josh","brady","zach"]
+SLOTS = ["alec","will","kallan","zach",
+         "lee","towner","blake","stephen",
+         "camden","p16","johng","sam",
+         "brett","josh","brady","rob"]
 TEAMS = {pid: ("n" if i % 4 < 2 else "g") for i, pid in enumerate(SLOTS)}
 
 print("setup")
@@ -30,15 +30,16 @@ assert sorted(SI) == list(range(1, 19)), "stroke indexes must be 1..18 exactly o
 print("  ok  par 72, stroke indexes 1-18 unique")
 
 assert len(IDS) == 16 and sorted(SLOTS) == sorted(IDS)
-assert "harrison" not in IDS and "collin" not in IDS
-assert HCP["rob"] == 12
-print("  ok  16 seats; Rob Wallace at 12 replaces Harrison; Collin removed")
+assert "harrison" not in IDS and "collin" not in IDS and "cain" not in IDS
+assert HCP["rob"] == 12 and HCP["blake"] == 2
+print("  ok  16 seats; Rob Wallace 12 in for Harrison, Blake Clifton 2 in for Cain")
 
 n_h = sum(HCP[p] for p in IDS if TEAMS[p] == "n")
 g_h = sum(HCP[p] for p in IDS if TEAMS[p] == "g")
 assert sum(1 for t in TEAMS.values() if t == "n") == 8
 assert sum(1 for t in TEAMS.values() if t == "g") == 8
 print("  ok  sides 8 v 8, handicap %d v %d (gap %d)" % (n_h, g_h, abs(n_h - g_h)))
+assert abs(n_h - g_h) <= 2, "opening draw should be close"
 
 for i, pid in enumerate(SLOTS):
     assert TEAMS[pid] == ("n" if i % 4 < 2 else "g"), (i, pid)

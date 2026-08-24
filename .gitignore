@@ -8,3 +8,4 @@ __pycache__/
 
 # Firebase web config — embedded into index.html at build time
 src/firebase-config.json
+src/_*.py

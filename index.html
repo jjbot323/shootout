@@ -13,6 +13,7 @@
   --ink:#0F2A3D; --ink-2:#456278; --ink-3:#557489;
   --line:#CFE1EF; --line-2:#E4EFF7;
   --t1:#1668A8; --t1-ink:#0E4C7D; --t1-soft:#DAEBF8;
+  --band:#134B74; --band-ink:#FFFFFF;
   --t2:#9A6208; --t2-ink:#7A4D05; --t2-soft:#FBEFD8;
   --red:#C0392B; --good:#1B7A57; --dirty:#9A6208; --dirty-bg:#FDF6E6;
   --board:#D7E9F7; --board-ink:#0F2A3D; --board-line:#B9D6EC; --board-dim:#456580;
@@ -27,6 +28,8 @@
     --ink:#E6EFF6; --ink-2:#A3BACD; --ink-3:#7793A8;
     --line:#22394C; --line-2:#1A2E3F;
     --t1:#6BB6E8; --t1-ink:#A5D6F5; --t1-soft:#123A55;
+  --band:#16374E; --band-ink:#E6EFF6;
+    --band:#16374E; --band-ink:#E6EFF6;
     --t2:#E0A94A; --t2-ink:#F0C97E; --t2-soft:#37290E;
     --red:#EC7C6F; --good:#5FBE95; --dirty:#E0A94A; --dirty-bg:#2B2210;
     --board:#071119; --board-ink:#E6EFF6; --board-line:#1B3245; --board-dim:#8AA6BB;
@@ -112,18 +115,34 @@ table{border-collapse:collapse; width:100%}
 .pend{display:inline-block; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); border:1px solid var(--line); border-radius:3px; padding:1px 5px; margin-left:6px; vertical-align:1px; font-family:var(--sans)}
 
 /* ---------- individual board ---------- */
-.ind th{padding:8px 10px; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); text-align:right; border-bottom:1px solid var(--line); background:var(--card-2); white-space:nowrap}
-.ind th:first-child{text-align:left}
-.ind td{padding:9px 10px; border-bottom:1px solid var(--line-2); text-align:right; font-size:14px}
-.ind td:first-child{text-align:left}
+.ind th{
+  background:var(--band); color:var(--band-ink); padding:8px 9px; text-align:left;
+  font-size:11px; font-weight:600; letter-spacing:.03em; white-space:nowrap;
+}
+.ind th.r{text-align:right}
+.ind td{padding:7px 9px; border-bottom:1px solid var(--line-2); font-size:13.5px}
+.ind tbody tr:nth-child(even){background:var(--card-2)}
 .ind tbody tr:last-child td{border-bottom:0}
-.ind .rk{width:32px; color:var(--ink-3); font-family:var(--mono); font-size:12px}
-.ind .who{font-weight:600; white-space:nowrap}
+.ind .pos{font-family:var(--mono); font-size:12px; color:var(--ink-3); width:46px; white-space:nowrap}
+.ind .who{font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:190px}
+.ind .score{
+  font-family:var(--mono); font-variant-numeric:tabular-nums; font-weight:700;
+  text-align:right; width:54px; font-size:14px;
+}
+.ind .score.under{color:var(--red)}
+.ind .score.over{color:var(--ink)}
+.ind .score.level{color:var(--ink-3)}
+.ind .thru{font-family:var(--mono); text-align:right; width:46px; color:var(--ink-2); font-size:13px}
+.ind .tm{font-size:11px; letter-spacing:.05em; text-transform:uppercase; font-weight:700; white-space:nowrap}
+.ind .tm.n{color:var(--t1)}
+.ind .tm.g{color:var(--t2)}
+/* the swatch beside the name already carries the side, so the column goes first
+   when there is no room for it */
+@media (max-width:560px){.ind .tmcol{display:none}}
 .swatch{display:inline-block; width:7px; height:7px; border-radius:2px; margin-right:7px; vertical-align:1px; background:var(--ink-3)}
 .swatch.n{background:var(--t1)}
 .swatch.g{background:var(--t2)}
-.ind .v{font-family:var(--mono); font-variant-numeric:tabular-nums}
-.ind .v.big{font-weight:600; font-size:15px}
+.dim{color:var(--ink-3)}
 .under{color:var(--red); font-weight:600}
 .dim{color:var(--ink-3)}
 
@@ -1015,27 +1034,50 @@ function renderInd(c){
   var t=byId("indBoard");
   t.textContent="";
   var thead=el("thead"), hr=el("tr");
-  ["Player","Gross","Net","Thru"].forEach(function(h){ hr.appendChild(el("th",null,h)); });
+  [["Pos",""],["Player",""],["Net","r"],["Thru","r"],["Gross","r"],["Team","tmcol"]]
+    .forEach(function(h){ hr.appendChild(el("th",h[1],h[0])); });
   thead.appendChild(hr); t.appendChild(thead);
+
   var rows=P.map(function(p){ return {p:p,t:c.tallies[p.id]}; })
     .filter(function(r){ return r.t.played>0; })
-    .sort(function(a,b){ return a.t.toPar-b.t.toPar||b.t.played-a.t.played; });
+    .sort(function(a,b){
+      return a.t.toPar-b.t.toPar||b.t.played-a.t.played||a.p.name.localeCompare(b.p.name);
+    });
+
+  /* Position by score, so players level with each other share a place and it
+     reads T5 rather than four separate rows. */
+  var i=0;
+  while(i<rows.length){
+    var j=i;
+    while(j+1<rows.length&&rows[j+1].t.toPar===rows[i].t.toPar) j++;
+    var label=(j>i?"T":"")+(i+1);
+    for(var k=i;k<=j;k++) rows[k].pos=label;
+    i=j+1;
+  }
+
+  function scoreCell(v){
+    var cls=v<0?"under":(v===0?"level":"over");
+    return el("td","score "+cls,toPar(v));
+  }
+
   var tb=el("tbody");
   if(!rows.length){
     var tr0=el("tr"), td0=el("td","dim","No rounds started.");
-    td0.colSpan=4; tr0.appendChild(td0); tb.appendChild(tr0);
+    td0.colSpan=6; tr0.appendChild(td0); tb.appendChild(tr0);
   }
   rows.forEach(function(r){
+    var side=teamOf(r.p.id);
     var tr=el("tr");
+    tr.appendChild(el("td","pos",r.pos));
     var who=el("td","who");
-    who.appendChild(el("span","swatch "+(teamOf(r.p.id)||"")));
+    who.appendChild(el("span","swatch "+(side||"")));
     who.appendChild(document.createTextNode(r.p.name));
+    who.title=r.p.name;
     tr.appendChild(who);
-    /* both figures are strokes against the par of the holes actually played */
-    var gp=r.t.gross-r.t.par;
-    tr.appendChild(el("td","v big"+(gp<0?" under":""),toPar(gp)));
-    tr.appendChild(el("td","v big"+(r.t.toPar<0?" under":""),toPar(r.t.toPar)));
-    tr.appendChild(el("td","v dim",r.t.last?String(r.t.last):"–"));
+    tr.appendChild(scoreCell(r.t.toPar));
+    tr.appendChild(el("td","thru",String(r.t.last||0)));
+    tr.appendChild(scoreCell(r.t.gross-r.t.par));
+    tr.appendChild(el("td","tm tmcol "+(side||""),side?TEAM[side]:"—"));
     tb.appendChild(tr);
   });
   t.appendChild(tb);

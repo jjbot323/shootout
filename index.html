@@ -77,8 +77,10 @@ p{margin:0}
   .tabs-in{padding:0 4px}
 }
 .tab .flag{display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--red); margin-left:6px; vertical-align:2px}
-/* a class-based display beats the UA [hidden] rule — restate it for anything styled here */
-.tab .flag[hidden],.panel[hidden],.card[hidden],[hidden]{display:none}
+/* HIDDEN ALWAYS WINS. Any later rule that sets `display` on a class outranks a
+   bare [hidden] of equal specificity, which has silently un-hidden elements on
+   this page twice (the tab dot, then the score sheet). !important ends it. */
+[hidden]{display:none !important}
 
 main{max-width:1100px; margin:0 auto; padding:16px 16px 20px; display:grid; gap:16px}
 .panel{display:grid; gap:16px}
@@ -189,6 +191,7 @@ table{border-collapse:collapse; width:100%}
 /* ---------- hole-by-hole scoring (the on-course view) ---------- */
 /* the score pad: a bottom sheet on phones, a centred dialog on wide screens */
 .sheet{position:fixed; inset:0; z-index:60; display:flex; align-items:flex-end; justify-content:center}
+.sheet[hidden]{display:none}
 .sheet-bd{position:absolute; inset:0; background:rgba(6,14,11,.58)}
 .sheet-p{
   position:relative; width:100%; max-width:600px; max-height:94vh;

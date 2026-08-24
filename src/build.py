@@ -22,6 +22,9 @@ check(tpl.count(M_SRC) == 1, "one literal SRC marker (found %d)" % tpl.count(M_S
 check(tpl.count(CLOSE) == 3, "three real closing script tags (found %d)" % tpl.count(CLOSE))
 check(tpl.index(M_STATE) < tpl.index(M_SRC), "STATE marker precedes SRC marker")
 check(tpl.count(ESCAPED) == 0, "no pre-escaped closing tags (found %d)" % tpl.count(ESCAPED))
+# HIDDEN GUARD: `hidden` must be unconditional, or a later class rule with a
+# display value silently reveals dialogs and badges (this has happened twice).
+check('[hidden]{display:none !important}' in tpl, "global [hidden] rule carries !important")
 
 # the self-source copy: identical to the template but with closing tags neutralised
 stored = tpl.replace(CLOSE, ESCAPED)

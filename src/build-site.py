@@ -255,6 +255,11 @@ assert 'sessionStorage' not in s, "pending-replay machinery must be gone"
 assert 'buildPage' not in s, "self-publish must be gone"
 assert s.count('</' + 'script>') == 2, "expected two scripts, got %d" % s.count('</' + 'script>')
 
+
+# HIDDEN GUARD: `hidden` must be unconditional, or a later class rule with a
+# display value silently reveals dialogs and badges (has happened twice).
+assert '[hidden]{display:none !important}' in s,     "the global [hidden] rule must carry !important"
+
 d = 0
 css = s[s.index('<style>') + 7:s.index('</style>')]
 for ch in css:

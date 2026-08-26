@@ -73,7 +73,7 @@ function blankGross(){
   });
   return g;
 }
-var state={v:6,mode:2,teams:{},slots:[],locked:false,roster:{},gross:blankGross()};
+var state={v:7,mode:2,matchups:defaultMatchups(2),teams:{},slots:[],locked:false,roster:{},gross:blankGross()};
 P.forEach(function(p){ state.teams[p.id]=DEFAULT_TEAMS[p.id]||null; });
 for(var _i=0;_i<NSLOT;_i++) state.slots.push(DEFAULT_SLOTS[_i]||null);
 
@@ -97,6 +97,11 @@ function applyRemote(raw){
   raw=raw||{};
   state.mode=(raw.mode===4)?4:2;
   var allow=SIDES[state.mode];
+  var rawMu=raw.matchups;
+  var flatMu=Array.isArray(rawMu)?rawMu:(rawMu&&typeof rawMu==="object"
+    ?[0,1,2,3,4,5,6,7].map(function(i){ return rawMu[String(i)]; }):null);
+  var mu=flatMu?unflatten(flatMu,state.mode):null;
+  state.matchups=matchupsValid(mu,state.mode)?mu:defaultMatchups(state.mode);
   var t=raw.teams||{};
   P.forEach(function(p){
     var v=t[p.id];
@@ -107,7 +112,7 @@ function applyRemote(raw){
     var id=Array.isArray(sl)?sl[i]:sl[String(i)];
     state.slots[i]=(typeof id==="string"&&BY[id])?id:null;
   }
-  state.slots=reconcile(state.slots,state.teams);
+  state.slots=reconcile(state.slots,state.teams,state.matchups);
   state.locked=raw.locked===true;
   var rr=raw.roster||{};
   state.roster={};
@@ -164,6 +169,9 @@ function commit(patch,msgId){
   }
   if(typeof patch.locked==="boolean") up["locked"]=patch.locked;
   if(patch.mode) up["mode"]=patch.mode;
+  if(patch.matchups){
+    for(var mi=0;mi<8;mi++) up["matchups/"+mi]=patch.matchups[mi];
+  }
   if(patch.roster){
     P.forEach(function(p){
       var o=patch.roster[p.id];
@@ -195,7 +203,12 @@ function onRemote(raw){
     if(state.gross[c.pid]) state.gross[c.pid][c.hole]=c.val;
   });
   if(!teamsDirty) P.forEach(function(p){ teamDraft[p.id]=state.teams[p.id]; });
-  if(!slotsDirty) slotDraft=state.slots.slice();
+  if(!slotsDirty){
+    slotDraft=state.slots.slice();
+    /* the pairing draft has to follow the server too, or it keeps whatever the
+       page happened to load with */
+    muDraft=state.matchups.map(function(p){ return p.slice(); });
+  }
   everSynced=true;
   render();
 }
@@ -221,7 +234,8 @@ window.__shootout={
     setConn(up?(everSynced?"Live":"Live"):"Offline");
     if(!up) setConn("Offline");
   },
-  seed:function(){ return {mode:2,teams:DEFAULT_STATE.teams,slots:DEFAULT_STATE.slots,
+  seed:function(){ return {mode:2,matchups:flatten(defaultMatchups(2)),
+                           teams:DEFAULT_STATE.teams,slots:DEFAULT_STATE.slots,
                            locked:false}; },
   fail:function(m){
     setConn("Offline");

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover">
 <title>Sixteen Man Shootout</title>
 <meta name="description" content="Live net better-ball scoring for a 16-player one-round match.">
-<meta name="theme-color" content="#0E211C">
+<meta name="theme-color" content="#FFFFFF">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Ctext y=%2726%27 font-size=%2726%27%3E%E2%9B%B3%3C/text%3E%3C/svg%3E">
 <style>
 :root{
@@ -713,7 +713,7 @@ var P=[
   {id:"stephen", name:"Stephen Wheatcroft", hcp:15},
   {id:"blake",   name:"Blake Clifton",     hcp:2},
   {id:"towner",  name:"Towner Webster",     hcp:21},
-  {id:"p16",     name:"TBD",                hcp:12}
+  {id:"jack",    name:"Jack Rohrman",       hcp:25}
 ];
 var BY={}; P.forEach(function(p){BY[p.id]=p;});
 /* strokes ARE the adjusted handicap — nobody is normalised to scratch */
@@ -734,13 +734,13 @@ function teeTime(m){
 }
 
 var DEFAULT_TEAMS={
-  blake:"n", will:"n", camden:"n", p16:"n", lee:"n", towner:"n", brett:"n", josh:"n",
-  alec:"g", zach:"g", kallan:"g", stephen:"g", johng:"g", sam:"g", brady:"g", rob:"g"
+  alec:"n", zach:"n", camden:"n", will:"n", brett:"n", josh:"n", lee:"n", jack:"n",
+  kallan:"g", stephen:"g", johng:"g", sam:"g", blake:"g", towner:"g", brady:"g", rob:"g"
 };
-var DEFAULT_SLOTS=["blake","will","alec","zach",
-                   "camden","p16","kallan","stephen",
-                   "lee","towner","johng","sam",
-                   "brett","josh","brady","rob"];
+var DEFAULT_SLOTS=["alec","zach","kallan","stephen",
+                   "camden","will","johng","sam",
+                   "brett","josh","blake","towner",
+                   "lee","jack","brady","rob"];
 
 /* tee-time slot layout: match m holds 4m..4m+3 — first two are Team 1, last two Team 2 */
 function slotTeam(i){ return (i%4)<2?"n":"g"; }
@@ -815,8 +815,7 @@ function applyRemote(raw){
     var o=rr[p.id];
     if(o&&typeof o==="object") state.roster[p.id]={name:o.name,hcp:o.hcp};
   });
-  if(!raw.roster&&raw.sub&&typeof raw.sub==="object")
-    state.roster.p16={name:raw.sub.name,hcp:raw.sub.hcp};
+
   var g=raw.gross||{};
   P.forEach(function(p){
     var row=g[p.id]||{}, out=[];

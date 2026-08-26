@@ -30,7 +30,7 @@ def sub(a, b, label, count=1):
 sub('<title>Sixteen Man Shootout</title>',
     '<title>Sixteen Man Shootout</title>\n'
     '<meta name="description" content="Live net better-ball scoring for a 16-player one-round match.">\n'
-    '<meta name="theme-color" content="#0E211C">\n'
+    '<meta name="theme-color" content="#FFFFFF">\n'
     '<link rel="icon" href="data:image/svg+xml,'
     '%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E'
     '%3Ctext y=%2726%27 font-size=%2726%27%3E%E2%9B%B3%3C/text%3E%3C/svg%3E">',
@@ -105,8 +105,7 @@ function applyRemote(raw){
     var o=rr[p.id];
     if(o&&typeof o==="object") state.roster[p.id]={name:o.name,hcp:o.hcp};
   });
-  if(!raw.roster&&raw.sub&&typeof raw.sub==="object")
-    state.roster.p16={name:raw.sub.name,hcp:raw.sub.hcp};
+
   var g=raw.gross||{};
   P.forEach(function(p){
     var row=g[p.id]||{}, out=[];

@@ -11,17 +11,17 @@ NAME = {
     "brett":"Brett Fair","sam":"Sam Brown","josh":"Josh John",
     "brady":"Brady Gayle","zach":"Zach Brantley","rob":"Rob Wallace",
     "stephen":"Stephen Wheatcroft","blake":"Blake Clifton","towner":"Towner Webster",
-    "p16":"TBD",
+    "jack":"Jack Rohrman",
 }
 HCP = {"lee":2,"kallan":3,"alec":4,"camden":7,"johng":9,
        "will":12,"brett":12,"sam":12,"josh":12,"brady":12,"zach":12,"rob":12,
-       "stephen":15,"blake":2,"towner":21,"p16":12}
+       "stephen":15,"blake":2,"towner":21,"jack":25}
 IDS = list(HCP.keys())
 
-SLOTS = ["blake","will","alec","zach",
-         "camden","p16","kallan","stephen",
-         "lee","towner","johng","sam",
-         "brett","josh","brady","rob"]
+SLOTS = ["alec","zach","kallan","stephen",
+         "camden","will","johng","sam",
+         "brett","josh","blake","towner",
+         "lee","jack","brady","rob"]
 TEAMS = {pid: ("n" if i % 4 < 2 else "g") for i, pid in enumerate(SLOTS)}
 
 print("setup")
@@ -30,9 +30,9 @@ assert sorted(SI) == list(range(1, 19)), "stroke indexes must be 1..18 exactly o
 print("  ok  par 72, stroke indexes 1-18 unique")
 
 assert len(IDS) == 16 and sorted(SLOTS) == sorted(IDS)
-assert "harrison" not in IDS and "collin" not in IDS and "cain" not in IDS
-assert HCP["rob"] == 12 and HCP["blake"] == 2
-print("  ok  16 seats; Rob Wallace 12 in for Harrison, Blake Clifton 2 in for Cain")
+assert "harrison" not in IDS and "collin" not in IDS and "cain" not in IDS and "p16" not in IDS
+assert HCP["rob"] == 12 and HCP["blake"] == 2 and HCP["jack"] == 25
+print("  ok  16 named players, no placeholder: Jack Rohrman 25 completes the field")
 
 n_h = sum(HCP[p] for p in IDS if TEAMS[p] == "n")
 g_h = sum(HCP[p] for p in IDS if TEAMS[p] == "g")

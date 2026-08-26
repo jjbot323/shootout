@@ -216,6 +216,20 @@ table{border-collapse:collapse; width:100%}
 .lg.strk{border:0; position:relative; width:10px; height:10px}
 .lg.strk::before{content:""; position:absolute; inset:0; margin:auto; width:5px; height:5px; border-radius:50%; background:var(--red)}
 
+/* ---------- the edit passcode ---------- */
+.gateb{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.gateb .gt{flex:1 1 auto; min-width:180px}
+.gate-b{padding:4px 16px 18px; display:flex; flex-direction:column; gap:12px}
+.gate-note{margin:0; font-size:13px; color:var(--ink-2); line-height:1.5}
+#gateInput{
+  font-family:var(--mono); font-size:22px; letter-spacing:.4em; text-align:center;
+  padding:12px 10px; border:1px solid var(--line); border-radius:6px;
+  background:var(--card); color:var(--ink); width:100%;
+}
+#gateInput:focus{outline:2px solid var(--brand); outline-offset:1px}
+#gateInput.bad{border-color:var(--red)}
+.gate-p{max-width:400px}
+
 /* ---------- hole-by-hole scoring (the on-course view) ---------- */
 /* the score pad: a bottom sheet on phones, a centred dialog on wide screens */
 .sheet{position:fixed; inset:0; z-index:60; display:flex; align-items:flex-end; justify-content:center}
@@ -571,6 +585,10 @@ footer{max-width:1100px; margin:0 auto; padding:4px 16px 40px; font-size:11.5px;
 
     <div class="card" id="teeSetupCard" hidden>
       <div class="card-h"><h2>Build the tee times</h2><span class="tag" id="slotTag"></span></div>
+      <div class="banner inset gateb" id="gateBannerTee">
+        <span class="gt" id="gateTextTee"></span>
+        <button class="btn sm" id="gateBtnTee">Enter passcode</button>
+      </div>
       <div class="banner inset" id="lockBannerTee" hidden>
         <b>The draw is locked.</b> Unlock on the Teams tab to change it.
       </div>
@@ -590,6 +608,10 @@ footer{max-width:1100px; margin:0 auto; padding:4px 16px 40px; font-size:11.5px;
   </div>
 
   <div class="panel" id="p-teams" role="tabpanel" aria-labelledby="tab-teams" hidden>
+    <div class="banner gateb" id="gateBanner">
+      <span class="gt" id="gateText"></span>
+      <button class="btn sm" id="gateBtn">Enter passcode</button>
+    </div>
     <div class="banner" id="roBanner2" hidden>
       <b>View only on this device.</b> Changing the sides needs edit access.
     </div>
@@ -672,6 +694,23 @@ footer{max-width:1100px; margin:0 auto; padding:4px 16px 40px; font-size:11.5px;
     <div class="msg" id="holeMsg"></div>
   </div>
 </div>
+<div class="sheet" id="gateSheet" hidden>
+  <div class="sheet-bd" id="gateBackdrop"></div>
+  <div class="sheet-p gate-p" id="gatePanel" role="dialog" aria-modal="true" aria-labelledby="gateTitle">
+    <div class="sheet-grab"></div>
+    <div class="sheet-h">
+      <div class="sheet-t"><b id="gateTitle">Passcode</b><span>Edit access</span></div>
+      <button type="button" class="sheet-x" id="gateClose" aria-label="Close">&times;</button>
+    </div>
+    <div class="gate-b">
+      <p class="gate-note">Posting scores is open to everyone. Changing players, teams or tee times needs the passcode.</p>
+      <input id="gateInput" type="password" inputmode="numeric" autocomplete="off"
+             maxlength="8" placeholder="&#8226;&#8226;&#8226;&#8226;" aria-label="Passcode">
+      <div class="msg" id="gateMsg"></div>
+      <button class="btn" id="gateGo">Unlock editing</button>
+    </div>
+  </div>
+</div>
 <div class="sheet" id="lbSheet" hidden>
   <div class="sheet-bd" id="lbBackdrop"></div>
   <div class="sheet-p lb-p" id="lbPanel" role="dialog" aria-modal="true" aria-labelledby="lbTitle">
@@ -745,7 +784,8 @@ var NSLOT=16;
 
 /* Two sides or four. In four-team mode each team has four players who split
    2+2 across two tee times, meeting a different team in each, so every team
-   plays two 2v2 better-ball matches. Four-team mode is match points only. */
+   plays two 2v2 better-ball matches. Four-team mode drops the team feats and
+   keeps match points plus the two for the low net round. */
 var SIDES={2:["n","g"],4:["n","g","c","d"]};
 var MATCHUPS={
   2:[["n","g"],["n","g"],["n","g"],["n","g"]],
@@ -993,48 +1033,73 @@ function compute(){
     return [w/2,w/2];
   }
   var finished=field.filter(function(id){ return tallies[id].done; });
+  /* Counts the tied low rounds each side holds, so the same shape serves two
+     teams and four. */
   function bestIndiv(key){
     var lo=Infinity, win=[];
     finished.forEach(function(id){
       var v=tallies[id][key];
       if(v<lo){ lo=v; win=[id]; } else if(v===lo){ win.push(id); }
     });
-    var n=win.filter(function(id){ return teamOf(id)==="n"; }).length;
-    return {lo:lo,n:n,g:win.length-n,names:win.map(function(id){ return BY[id].name; })};
+    var cnt={};
+    sides().forEach(function(t){ cnt[t]=0; });
+    win.forEach(function(id){ var t=teamOf(id); if(t in cnt) cnt[t]++; });
+    return {lo:lo,cnt:cnt,win:win,names:win.map(function(id){ return BY[id].name; })};
+  }
+  /* Depth breaks a tie on a low round: the side holding the most of them takes
+     the lot, and sides level on that count share it. */
+  function byCount(worth,cnt){
+    var by={}, top=0;
+    sides().forEach(function(t){ top=Math.max(top,cnt[t]||0); });
+    var tied=sides().filter(function(t){ return top>0&&(cnt[t]||0)===top; });
+    sides().forEach(function(t){ by[t]=tied.indexOf(t)>=0?worth/tied.length:0; });
+    return by;
+  }
+  /* Two-side totals (aggregate, birdies) only ever exist in two-team mode. */
+  function byTotals(worth,a,b,low){
+    var p=split(a,b,worth,low), by={};
+    sides().forEach(function(t){ by[t]=0; });
+    by.n=p[0]; by.g=p[1];
+    return by;
   }
   function doneNets(t){
     return roster(t).filter(function(p){ return tallies[p.id].done; })
                     .map(function(p){ return tallies[p.id].net; });
   }
 
-  var bonuses=[], total=16;
+  function nameList(bb,unit){
+    if(bb.lo===Infinity) return "no round complete yet";
+    var who=bb.names.length>3?(bb.names.length+" tied"):bb.names.join(", ");
+    return who+" · "+unit+" "+bb.lo;
+  }
+  var bn=bestIndiv("net");
+  /* Low net round is the one feat that pays in both formats. */
+  var lowNet={label:"Low net round",worth:2,sub:nameList(bn,"net"),by:byCount(2,bn.cnt)};
+
+  var bonuses=[lowNet], total=16+lowNet.worth;
   if(bonusesApply()){
     var dnN=doneNets("n"), dnG=doneNets("g");
     var aggN=low4(dnN), aggG=low4(dnG);
     var aggReady=dnN.length>=4&&dnG.length>=4;
-    var bn=bestIndiv("net"), bg=bestIndiv("gross");
+    var bg=bestIndiv("gross");
     var birdN=sum(listOf("n","bird")), birdG=sum(listOf("g","bird"));
-    function nameList(bb,unit){
-      if(bb.lo===Infinity) return "no round complete yet";
-      var who=bb.names.length>3?(bb.names.length+" tied"):bb.names.join(", ");
-      return who+" · "+unit+" "+bb.lo;
-    }
     bonuses=[
       {label:"Team aggregate",worth:4,
        sub:aggReady?("Four lowest net rounds · "+TEAM.n+": "+aggN+" · "+TEAM.g+": "+aggG)
                    :("Four lowest net rounds · needs 4 finished a side ("+dnN.length+" / "+dnG.length+")"),
-       pts:split(aggN,aggG,4,true)},
-      {label:"Low net round",worth:2,sub:nameList(bn,"net"),
-       pts:bn.n===bn.g?[1,1]:(bn.n>bn.g?[2,0]:[0,2])},
-      {label:"Low gross round",worth:2,sub:nameList(bg,"gross"),
-       pts:bg.n===bg.g?[1,1]:(bg.n>bg.g?[2,0]:[0,2])},
+       by:byTotals(4,aggN,aggG,true)},
+      lowNet,
+      {label:"Low gross round",worth:2,sub:nameList(bg,"gross"),by:byCount(2,bg.cnt)},
       {label:"Birdie count",worth:2,sub:TEAM.n+": "+birdN+" · "+TEAM.g+": "+birdG,
-       pts:split(birdN,birdG,2,false)}
+       by:byTotals(2,birdN,birdG,false)}
     ];
     total=26;
-    if(allDone){
-      bonuses.forEach(function(bb){ pts.n+=bb.pts[0]; pts.g+=bb.pts[1]; awarded+=bb.worth; });
-    }
+  }
+  if(allDone){
+    bonuses.forEach(function(bb){
+      sides().forEach(function(t){ pts[t]+=bb.by[t]||0; });
+      awarded+=bb.worth;
+    });
   }
 
   /* standings, so a four-way race can be ranked */
@@ -1146,6 +1211,14 @@ function setStatus(t){
 }
 
 var api=null, readOnly=false, saving=false;
+
+/* The passcode is a soft gate: the database itself is open, so this stops a
+   player wandering into the draw by accident, not somebody determined. */
+var PASSCODE="8080", GATE_KEY="shootout.edit.v1";
+var editUnlocked=false;
+try{ editUnlocked=window.localStorage&&localStorage.getItem(GATE_KEY)==="1"; }catch(e){}
+/* Setup surfaces need the passcode; scoring never does. */
+function canSetup(){ return !readOnly&&editUnlocked; }
 var PKEY="ssg-pending-v4", TKEY="ssg-tries-v4", GKEY="ssg-group-v1";
 var teamDraft={}, slotDraft=state.slots.slice(), muDraft=state.matchups.map(function(p){ return p.slice(); });
 P.forEach(function(p){ teamDraft[p.id]=state.teams[p.id]; });
@@ -1193,9 +1266,32 @@ function renderLedger(c){
       names(x.m.a)+"  vs  "+names(x.m.b)+"  ·  "+where,
       x.s.pts[0], x.s.pts[1], x.s.played<18, x.m.tA, x.m.tB));
   });
+  /* Four teams cannot share the two point columns a match row uses, so a bonus
+     names the side it went to instead. */
+  function bonusRow4(b,live){
+    var won=sides().filter(function(t){ return live&&(b.by[t]||0)>0; });
+    var tr=el("tr");
+    tr.appendChild(el("td","pt "+(won.length===1?won[0]:"z"),fmt(live?b.worth:0)));
+    var mid=el("td","lbl");
+    mid.appendChild(document.createTextNode(b.label+" · "+b.worth+" pts"));
+    if(!live) mid.appendChild(el("span","pend","pending"));
+    /* The left column already carries the two points. A shared feat says who
+       shares it rather than printing thirds that look like they do not add up. */
+    var names=won.map(function(t){ return TEAM[t]; }).join(", ");
+    mid.appendChild(el("span","sub",b.sub+(won.length
+      ? ("  ·  "+(won.length>1?"shared by ":"")+names)
+      : "")));
+    tr.appendChild(mid);
+    tr.appendChild(el("td","pt z",""));
+    return tr;
+  }
   c.bonuses.forEach(function(b){
-    tb.appendChild(row(b.label+" · "+b.worth+" pts",b.sub,
-      c.allDone?b.pts[0]:0,c.allDone?b.pts[1]:0,!c.allDone,"n","g"));
+    if(state.mode===2){
+      tb.appendChild(row(b.label+" · "+b.worth+" pts",b.sub,
+        c.allDone?b.by.n:0,c.allDone?b.by.g:0,!c.allDone,"n","g"));
+    }else{
+      tb.appendChild(bonusRow4(b,c.allDone));
+    }
   });
   t.appendChild(tb);
   var tf=el("tfoot"), tr=el("tr");
@@ -1204,7 +1300,7 @@ function renderLedger(c){
     tr.appendChild(el("td",null,"Awarded · "+fmt(c.awarded)+" of "+c.total));
     tr.appendChild(el("td","pt "+(c.pts.g>c.pts.n?"g":"z"),fmt(c.pts.g)));
   }else{
-    var td=el("td",null,"Awarded · "+fmt(c.awarded)+" of "+c.total+" · match points only");
+    var td=el("td",null,"Awarded · "+fmt(c.awarded)+" of "+c.total);
     td.colSpan=3;
     tr.appendChild(td);
   }
@@ -1362,6 +1458,77 @@ function refreshHeader(){
   setStatus(c.allDone?"Final":"");
   byId("setupBanner").hidden=assignedCount(state.slots)===NSLOT;
   return c;
+}
+
+/* ---------- the edit passcode ---------- */
+var gateOpenState=false, gateReturn=null, gateThen=null;
+function renderGate(){
+  var on=canSetup();
+  [["gateBanner","gateText","gateBtn"],["gateBannerTee","gateTextTee","gateBtnTee"]]
+    .forEach(function(ids){
+      var box=byId(ids[0]), txt=byId(ids[1]), btn=byId(ids[2]);
+      if(!box) return;
+      box.hidden=readOnly;
+      txt.textContent="";
+      txt.appendChild(el("b",null,on?"Editing is unlocked on this device."
+                                   :"Editing is locked."));
+      txt.appendChild(document.createTextNode(on
+        ? " Players, teams and tee times can be changed here."
+        : " Posting scores stays open to everyone."));
+      btn.textContent=on?"Lock again":"Enter passcode";
+      btn.className="btn sm"+(on?" ghost":"");
+    });
+}
+function setUnlocked(v){
+  editUnlocked=!!v;
+  try{
+    if(window.localStorage){
+      if(v) localStorage.setItem(GATE_KEY,"1"); else localStorage.removeItem(GATE_KEY);
+    }
+  }catch(e){}
+  render();
+}
+function openGate(then){
+  gateThen=then||null;
+  gateReturn=document.activeElement;
+  gateOpenState=true;
+  byId("gateSheet").hidden=false;
+  document.body.style.overflow="hidden";
+  var i=byId("gateInput");
+  i.value=""; i.className="";
+  msg("gateMsg","","");
+  byId("gatePanel").focus();
+  /* off-frame, or iOS ignores the focus and never raises the keypad */
+  setTimeout(function(){ i.focus(); },60);
+}
+function closeGate(){
+  if(!gateOpenState) return;
+  gateOpenState=false;
+  gateThen=null;
+  byId("gateSheet").hidden=true;
+  if(!sheetOpen&&!lbOpenState) document.body.style.overflow="";
+  var back=(gateReturn&&gateReturn.focus&&gateReturn!==document.body)?gateReturn:byId("gateBtn");
+  if(back&&back.focus) back.focus();
+  gateReturn=null;
+}
+function tryGate(){
+  var i=byId("gateInput");
+  if(String(i.value).trim()!==PASSCODE){
+    i.className="bad";
+    msg("gateMsg","That is not the passcode.","err");
+    i.select();
+    return;
+  }
+  var then=gateThen;
+  closeGate();
+  setUnlocked(true);
+  if(then) then();
+}
+/* Runs `then` when editing is allowed, and asks for the passcode when it is not. */
+function needEdit(then){
+  if(readOnly) return;
+  if(canSetup()){ then(); return; }
+  openGate(then);
 }
 
 /* ---------- the leaderboard popup ---------- */
@@ -1567,7 +1734,7 @@ function upDrag(e){
 }
 
 function renderTeams(){
-  var editable=!state.locked&&!readOnly&&!saving;
+  var editable=!state.locked&&canSetup()&&!saving;
   var order=sides(), want=sideSize();
 
   byId("mode2").setAttribute("aria-pressed",state.mode===2?"true":"false");
@@ -1657,7 +1824,7 @@ function renderTeams(){
   byId("balanceBtn").disabled=!editable;
   byId("rerollBtn").disabled=!editable;
   byId("clearTeamsBtn").disabled=!editable;
-  byId("lockBtn").disabled=readOnly||saving;
+  byId("lockBtn").disabled=!canSetup()||saving;
   byId("lockBtn").textContent=state.locked?"Unlock":"Lock";
   byId("lockBanner").hidden=!state.locked;
   byId("rescoreBanner").hidden=!(dirty&&anyScores());
@@ -1666,6 +1833,7 @@ function renderTeams(){
 
   var tm=byId("teamMsg");
   if(readOnly) tm.textContent="View only on this device.";
+  else if(!editUnlocked) tm.textContent="Locked \u2014 needs the passcode.";
   else if(state.locked) tm.textContent="Locked.";
   else if(!evenSides(teamDraft)) tm.textContent="Needs "+want+" a team.";
   else if(dirty) tm.textContent="Unsaved on this device.";
@@ -1690,7 +1858,7 @@ function renderTeeSetup(){
   if(!teeSetupOpen) return;
 
   var even=evenSides(state.teams);
-  var editable=!state.locked&&!readOnly&&!saving&&even;
+  var editable=!state.locked&&canSetup()&&!saving&&even;
   var muOk=matchupsValid(muDraft,state.mode);
   byId("lockBannerTee").hidden=!state.locked;
   byId("unevenBanner").hidden=even;
@@ -1791,6 +1959,7 @@ function renderTeeSetup(){
   var need=sideSize()/2;
   var tm=byId("teeMsg");
   if(readOnly) tm.textContent="View only on this device.";
+  else if(!editUnlocked) tm.textContent="Locked \u2014 needs the passcode.";
   else if(state.locked) tm.textContent="Locked.";
   else if(!even) tm.textContent="Set the sides first.";
   else if(!muOk) tm.textContent="Each team must appear in exactly "+need+
@@ -2129,18 +2298,19 @@ function rosterBadCount(){
   }).length;
 }
 function markRoster(){
-  var dirty=rosterDirty(), editable=!state.locked&&!readOnly&&!saving, bad=rosterBadCount();
+  var dirty=rosterDirty(), editable=!state.locked&&canSetup()&&!saving, bad=rosterBadCount();
   byId("saveRosterBtn").disabled=!editable||!dirty||bad>0;
   byId("revertRosterBtn").disabled=!editable||!dirty;
   var m=byId("rosterMsg");
   if(readOnly) m.textContent="View only on this device.";
+  else if(!editUnlocked) m.textContent="Locked \u2014 needs the passcode.";
   else if(state.locked) m.textContent="Locked.";
   else if(bad) m.textContent="Handicaps must be 0 to 40.";
   else if(dirty) m.textContent="Unsaved on this device.";
   else m.textContent="Everyone is seeing this roster.";
 }
 function renderRoster(){
-  var editable=!state.locked&&!readOnly&&!saving;
+  var editable=!state.locked&&canSetup()&&!saving;
   var list=byId("rosterList");
   var focus=document.activeElement;
   var keep=(focus&&focus.getAttribute)?focus.getAttribute("data-rid"):null;
@@ -2185,6 +2355,7 @@ function render(){
   renderDraw();
   if(lbOpenState) renderBoard(compute());
   if(sheetOpen) renderHole(true);
+  renderGate();
   renderRoster();
   renderTeams();
   renderTeeSetup();
@@ -2354,7 +2525,7 @@ byId("discardBtn").addEventListener("click",function(){
 
 /* teams tab actions */
 function setMode(m){
-  if(saving||readOnly||state.locked||state.mode===m) return;
+  if(saving||!canSetup()||state.locked||state.mode===m) return;
   state.mode=m;
   state.matchups=defaultMatchups(m);
   muDraft=state.matchups.map(function(p){ return p.slice(); });
@@ -2369,8 +2540,8 @@ function setMode(m){
   msg("balMsg",m===4?("Four teams of "+sideSize()+", auto-balanced. Tee times cleared — use Auto-pair on the Tee Times tab.")
                     :("Two sides of "+sideSize()+", auto-balanced. Tee times cleared — use Auto-pair on the Tee Times tab."),"");
 }
-byId("mode2").addEventListener("click",function(){ setMode(2); });
-byId("mode4").addEventListener("click",function(){ setMode(4); });
+byId("mode2").addEventListener("click",function(){ needEdit(function(){ setMode(2); }); });
+byId("mode4").addEventListener("click",function(){ needEdit(function(){ setMode(4); }); });
 
 byId("balanceBtn").addEventListener("click",function(){
   teamDraft=balancedTeams(false); renderTeams();
@@ -2391,7 +2562,7 @@ byId("revertTeamsBtn").addEventListener("click",function(){
   msg("balMsg","Reverted to the saved sides.","");
 });
 byId("saveTeamsBtn").addEventListener("click",function(){
-  if(saving||readOnly||state.locked||!teamDraftDirty()||!evenSides(teamDraft)) return;
+  if(saving||!canSetup()||state.locked||!teamDraftDirty()||!evenSides(teamDraft)) return;
   var before=assignedCount(state.slots);
   P.forEach(function(p){ state.teams[p.id]=teamDraft[p.id]; });
   state.slots=reconcile(state.slots,state.teams,state.matchups);
@@ -2405,11 +2576,31 @@ byId("saveTeamsBtn").addEventListener("click",function(){
   }
 });
 byId("lockBtn").addEventListener("click",function(){
-  if(saving||readOnly) return;
+  if(saving||!canSetup()) return;
   state.locked=!state.locked;
   if(state.locked) resyncDrafts();
   render();
   commit({locked:state.locked},"teamMsg");
+});
+
+byId("gatePanel").tabIndex=-1;
+byId("gateClose").addEventListener("click",closeGate);
+byId("gateBackdrop").addEventListener("click",closeGate);
+byId("gateGo").addEventListener("click",tryGate);
+byId("gateInput").addEventListener("keydown",function(e){
+  if(e.key==="Enter"){ e.preventDefault(); tryGate(); }
+});
+byId("gateInput").addEventListener("input",function(){
+  byId("gateInput").className="";
+  msg("gateMsg","","");
+});
+document.addEventListener("keydown",function(e){
+  if(gateOpenState&&e.key==="Escape"){ e.preventDefault(); closeGate(); }
+});
+[["gateBtn","gateBanner"],["gateBtnTee","gateBannerTee"]].forEach(function(ids){
+  byId(ids[0]).addEventListener("click",function(){
+    if(canSetup()) setUnlocked(false); else openGate(null);
+  });
 });
 
 byId("sheetPanel").tabIndex=-1;
@@ -2459,7 +2650,7 @@ byId("holeNext").addEventListener("click",function(){
 })();
 
 byId("saveRosterBtn").addEventListener("click",function(){
-  if(saving||readOnly||state.locked||!rosterDirty()) return;
+  if(saving||!canSetup()||state.locked||!rosterDirty()) return;
   if(rosterBadCount()){ msg("rosterHint","Handicaps must be whole numbers from 0 to 40.","err"); return; }
   var out={};
   P.forEach(function(p){
@@ -2488,12 +2679,21 @@ document.addEventListener("pointercancel",function(e){
 
 /* tee time editor actions */
 byId("editTeeBtn").addEventListener("click",function(){
+  /* opening the editor is itself the prompt to unlock, so the passcode is asked
+     for once here rather than on every control inside */
+  if(!teeSetupOpen&&!canSetup()&&!readOnly){
+    openGate(function(){
+      teeSetupOpen=true; renderTeeSetup();
+      byId("teeSetupCard").scrollIntoView({block:"nearest"});
+    });
+    return;
+  }
   teeSetupOpen=!teeSetupOpen;
   renderTeeSetup();
   if(teeSetupOpen) byId("teeSetupCard").scrollIntoView({block:"nearest"});
 });
 byId("autoPairBtn").addEventListener("click",function(){
-  if(!evenSides(state.teams)||!matchupsValid(muDraft,state.mode)) return;
+  if(!canSetup()||!evenSides(state.teams)||!matchupsValid(muDraft,state.mode)) return;
   slotDraft=pairedSlots(state.teams,muDraft); renderTeeSetup();
   msg("pairMsg","Paired. Save to push the tee times to everyone.","");
 });
@@ -2509,7 +2709,7 @@ byId("revertSlotsBtn").addEventListener("click",function(){
   msg("pairMsg","Reverted to the saved tee times.","");
 });
 byId("saveSlotsBtn").addEventListener("click",function(){
-  if(saving||readOnly||state.locked||!slotDraftDirty()) return;
+  if(saving||!canSetup()||state.locked||!slotDraftDirty()) return;
   if(!matchupsValid(muDraft,state.mode)){
     msg("pairMsg","That pairing cannot be seated \u2014 see the note above.","err");
     return;

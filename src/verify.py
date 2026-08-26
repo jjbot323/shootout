@@ -142,8 +142,87 @@ for label, bp, sub in bonuses:
 print("  TOTAL  Team 1 %s  Team 2 %s   (sum %s, must be 26)" % (pts[0], pts[1], pts[0] + pts[1]))
 assert abs(pts[0] + pts[1] - 26) < 1e-9, pts
 
+# ---- four teams: match points plus the low net round ---------------------
+# Modelled from scratch rather than reusing the two-team path, so a mistake in
+# the page's generalisation cannot be mirrored here.
+FOUR = ["n", "g", "c", "d"]
+four_team = {}
+for i, pid in enumerate(IDS):
+    four_team[pid] = FOUR[i // 4]
+MU4 = [("n", "g"), ("c", "d"), ("n", "c"), ("g", "d")]
+
+# every team meets two others, never itself
+seen4 = {t: 0 for t in FOUR}
+for a, b in MU4:
+    assert a != b, "a team cannot play itself"
+    seen4[a] += 1
+    seen4[b] += 1
+assert all(v == 2 for v in seen4.values()), seen4
+print("  ok  four-team draw: each team in exactly 2 tee times, never itself")
+
+four_pts = {t: 0.0 for t in FOUR}
+
+# seat the draw the way the page does: two from each side of each pairing
+taken, slots4 = set(), []
+for a, b in MU4:
+    for t in (a, b):
+        pick = [p for p in IDS if four_team[p] == t and p not in taken][:2]
+        assert len(pick) == 2
+        for p in pick:
+            taken.add(p)
+            slots4.append(p)
+assert len(slots4) == 16 and len(set(slots4)) == 16
+
+for m, (ta, tb) in enumerate(MU4):
+    A = slots4[m * 4:m * 4 + 2]
+    B = slots4[m * 4 + 2:m * 4 + 4]
+    assert all(four_team[p] == ta for p in A) and all(four_team[p] == tb for p in B)
+    f, b_ = [0, 0], [0, 0]
+    for h in range(18):
+        a_net = min(net(p, h) for p in A)
+        b_net = min(net(p, h) for p in B)
+        seg = f if h < 9 else b_
+        if a_net < b_net: seg[0] += 1
+        elif b_net < a_net: seg[1] += 1
+    won = [f[0] + b_[0], f[1] + b_[1]]
+    mp = [0.0, 0.0]
+    for seg in (f, b_):
+        if seg[0] > seg[1]: mp[0] += 1
+        elif seg[1] > seg[0]: mp[1] += 1
+        else: mp[0] += 0.5; mp[1] += 0.5
+    if won[0] > won[1]: mp[0] += 2
+    elif won[1] > won[0]: mp[1] += 2
+    else: mp[0] += 1; mp[1] += 1
+    four_pts[ta] += mp[0]
+    four_pts[tb] += mp[1]
+
+match_total = sum(four_pts.values())
+assert abs(match_total - 16) < 1e-9, four_pts
+
+# the low net round pays 2, to the side holding the most of the tied low rounds
+lo4 = min(tot_net.values())
+win4 = [i for i in IDS if tot_net[i] == lo4]
+cnt4 = {t: sum(1 for i in win4 if four_team[i] == t) for t in FOUR}
+top4 = max(cnt4.values())
+tied4 = [t for t in FOUR if cnt4[t] == top4]
+for t in tied4:
+    four_pts[t] += 2.0 / len(tied4)
+
+print("")
+print("four-team round (match points + low net round)")
+for t in FOUR:
+    print("  Team %d  %s" % (FOUR.index(t) + 1, four_pts[t]))
+print("  Low net round    2 to %s   (%s net %d)"
+      % (", ".join("Team %d" % (FOUR.index(t) + 1) for t in tied4),
+         ", ".join(NAME[i] for i in win4), lo4))
+print("  TOTAL  %s   (16 match + 2 feat, must be 18)" % sum(four_pts.values()))
+assert abs(sum(four_pts.values()) - 18) < 1e-9, four_pts
+
 io.open(os.path.join(HERE, "expected.json"), "w", encoding="utf-8").write(json.dumps({
     "ptsN": pts[0], "ptsG": pts[1],
+    "four": {"teams": four_team, "matchups": [t for pair in MU4 for t in pair],
+             "slots": slots4, "pts": four_pts,
+             "gross": {i: gross[i] for i in IDS}},
     "aggN": agg_n, "aggG": agg_g, "birdN": bird_n, "birdG": bird_g,
     "loNet": lo_net, "loGross": lo_gr,
     "matches": [{"no": no, "f": f, "b": b, "won": won, "pts": mp} for no, f, b, won, mp in detail],

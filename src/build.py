@@ -40,32 +40,60 @@ check('[hidden]{display:none !important}' in tpl, "global [hidden] rule carries 
 stored = tpl.replace(CLOSE, ESCAPED)
 check(CLOSE not in stored, "stored copy holds no parser-terminating tag")
 
-HCP = {"lee":2,"kallan":3,"alec":4,"camden":7,"johng":9,
-       "will":12,"brett":12,"sam":12,"josh":12,"brady":12,"zach":12,"rob":12,
-       "stephen":15,"cain":15,"towner":15,
-       "p16":12}                       # the open sixteenth seat
-PLAYERS = list(HCP.keys())
-assert len(PLAYERS) == 16
+# ---- the draw the page actually ships -------------------------------------
+# This used to check a hardcoded list that had drifted years out of date, so it
+# passed no matter what the template said. Read the real defaults instead: if a
+# snapshot ever bakes in a draw that does not hold together, the build stops.
+SIDE_NAMES = {2: ["n", "g"], 4: ["n", "g", "c", "d"]}
 
-# opening draw: an exactly even 83-v-83 split on the adjusted handicaps
-SLOTS = ["alec","towner","lee","cain",
-         "camden","rob","kallan","stephen",
-         "johng","p16","will","brett",
-         "sam","josh","brady","zach"]
-assert sorted(SLOTS) == sorted(PLAYERS), "opening assignment must use each player once"
+ROSTER = re.findall(r'\{id:"(\w+)",\s*name:"([^"]+)",\s*hcp:(\d+)\}', tpl)
+assert len(ROSTER) == 16, "expected 16 players in the template, found %d" % len(ROSTER)
+PLAYERS = [r[0] for r in ROSTER]
+HCP = {r[0]: int(r[2]) for r in ROSTER}
+NAME = {r[0]: r[1] for r in ROSTER}
 
-TEAMS = {pid: ("n" if i % 4 < 2 else "g") for i, pid in enumerate(SLOTS)}
-n_h = sum(HCP[p] for p in PLAYERS if TEAMS[p] == "n")
-g_h = sum(HCP[p] for p in PLAYERS if TEAMS[p] == "g")
-assert sum(1 for t in TEAMS.values() if t == "n") == 8
-assert sum(1 for t in TEAMS.values() if t == "g") == 8
-check(n_h == g_h, "opening sides are level on handicap (%d v %d)" % (n_h, g_h))
-for i, pid in enumerate(SLOTS):
-    assert TEAMS[pid] == ("n" if i % 4 < 2 else "g"), i
-print("  ok  8 a side, every seat holds its own side")
+MODE = int(re.search(r"var DEFAULT_MODE=(\d+);", tpl).group(1))
+MU = re.search(r'var DEFAULT_MU=\[([^\]]*)\];', tpl).group(1)
+MU = re.findall(r'"(\w+)"', MU)
+TEAMS = dict(re.findall(r'(\w+):"(\w)"',
+                        re.search(r"var DEFAULT_TEAMS=\{(.*?)\};", tpl, re.S).group(1)))
+SLOTS = re.findall(r'"(\w+)"',
+                   re.search(r"var DEFAULT_SLOTS=\[(.*?)\];", tpl, re.S).group(1))
 
-state = {"v": 4, "teams": TEAMS, "slots": SLOTS, "locked": False,
-         "sub": {"name": "", "hcp": HCP["p16"]},
+allow = SIDE_NAMES[MODE]
+per = 16 // MODE
+check(sorted(SLOTS) == sorted(PLAYERS), "the default draw seats each player exactly once")
+check(sorted(TEAMS) == sorted(PLAYERS), "every player has a side")
+check(all(t in allow for t in TEAMS.values()), "no player sits on a side this mode lacks")
+counts = {t: sum(1 for v in TEAMS.values() if v == t) for t in allow}
+check(all(v == per for v in counts.values()),
+      "%d a side (%s)" % (per, ", ".join("%s %d" % (t, counts[t]) for t in allow)))
+
+check(len(MU) == 8 and all(c in allow for c in MU), "the pairing names real sides")
+seen = {t: 0 for t in allow}
+selfplay = False
+for i in range(4):
+    a, b = MU[i * 2], MU[i * 2 + 1]
+    if a == b:
+        selfplay = True
+    seen[a] += 1
+    seen[b] += 1
+check(not selfplay, "no team is drawn against itself")
+check(all(v == per // 2 for v in seen.values()),
+      "each side appears in exactly %d tee times" % (per // 2))
+
+bad = [i for i, pid in enumerate(SLOTS)
+       if TEAMS.get(pid) != MU[(i // 4) * 2 + (0 if i % 4 < 2 else 1)]]
+check(not bad, "every seat holds a player from its own side")
+
+spread = max(sum(HCP[p] for p in PLAYERS if TEAMS[p] == t) for t in allow) - \
+         min(sum(HCP[p] for p in PLAYERS if TEAMS[p] == t) for t in allow)
+print("  ok  %d teams, handicap spread %d (%s)" % (
+    MODE, spread,
+    ", ".join("%s %d" % (t, sum(HCP[p] for p in PLAYERS if TEAMS[p] == t)) for t in allow)))
+
+state = {"v": 7, "mode": MODE, "matchups": MU, "teams": TEAMS, "slots": SLOTS,
+         "locked": False, "roster": {},
          "gross": {p: [None] * 18 for p in PLAYERS}}
 blob = json.dumps(state, separators=(",", ":"))
 
@@ -93,7 +121,7 @@ check(gen2 == out, "a second regeneration is byte-identical (stable fixed point)
 # a DIFFERENT state must change only the state slot, never the embedded source
 moved = dict(state)
 moved["gross"] = dict(state["gross"])
-moved["gross"]["lee"] = [4] + [None] * 17
+moved["gross"][PLAYERS[0]] = [4] + [None] * 17
 blob2 = json.dumps(moved, separators=(",", ":"))
 gen3 = recovered_tpl.replace(M_STATE, blob2, 1).replace(M_SRC, recovered_stored, 1)
 a = gen3.index('<script id="src" type="text/plain">')

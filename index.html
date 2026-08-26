@@ -166,8 +166,19 @@ table{border-collapse:collapse; width:100%}
 .tee{border-collapse:separate; border-spacing:0; width:auto; min-width:100%; font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:12px}
 .tee th,.tee td{border-bottom:1px solid var(--line-2); border-right:1px solid var(--line-2); padding:0; text-align:center; background:var(--card)}
 .tee .fx{position:sticky; z-index:2}
-.tee .c1{left:0; min-width:136px; width:136px; text-align:left; font-family:var(--sans); border-right:1px solid var(--line)}
-.tee .c2{left:136px; min-width:48px; width:48px; border-right:2px solid var(--line)}
+.tee .c1{left:0; min-width:118px; width:118px; text-align:left; font-family:var(--sans); border-right:1px solid var(--line)}
+.tee .c2{left:var(--fx2,118px); min-width:42px; width:42px}
+.tee .c3{left:var(--fx3,160px); min-width:42px; width:42px; border-right:2px solid var(--line)}
+/* a phone gives up name width rather than holes, so the frozen block stays put */
+@media (max-width:560px){
+  .tee .c1{min-width:104px; width:104px}
+  .tee .c2{min-width:40px; width:40px}
+  .tee .c3{min-width:40px; width:40px}
+  /* a table grows a cell to fit its content whatever the declared width says,
+     so the name itself has to be what is capped */
+  .tee .pcell{padding:5px 6px 5px 10px}
+  .tee .pcell b{max-width:92px}
+}
 .tee thead th{position:sticky; top:0; z-index:3; background:var(--card-2); color:var(--ink-3); font-weight:600; font-size:11px; height:28px; min-width:38px}
 .tee thead th.fx{z-index:4}
 .tee thead tr.parrow th,.tee thead tr.parrow td{position:sticky; top:28px; z-index:3; background:var(--card-2); color:var(--ink-3); font-size:11px; height:24px}
@@ -183,25 +194,43 @@ table{border-collapse:collapse; width:100%}
 .tee tr.c .c1{box-shadow:inset 3px 0 0 var(--t3)}
 .tee tr.d .c1{box-shadow:inset 3px 0 0 var(--t4)}
 .tee .topar{font-weight:700; font-size:13px; color:var(--ink-2)}
+/* net decides the matches, so gross sits back a shade */
+.tee .topar.gr{font-weight:600; font-size:12px; color:var(--ink-3)}
 .tee .topar.under{color:var(--red)}
 .tee .topar.none{color:var(--ink-3); font-weight:400}
 .tee .tot{background:var(--card-2); font-weight:600; min-width:42px}
 .tee td.hole{padding:0; position:relative; height:38px; min-width:38px}
-.tee td.hole.strk::before{content:""; position:absolute; top:3px; right:3px; width:4px; height:4px; border-radius:50%; background:var(--red); opacity:.85; pointer-events:none}
-.tee td.hole[data-strokes="2"]::after{content:""; position:absolute; top:3px; right:9px; width:4px; height:4px; border-radius:50%; background:var(--red); opacity:.85; pointer-events:none}
+/* red pips mark a stroke hole until a score lands; after that the net in the
+   corner says it better */
+.tee td.hole.strk:not(.has)::before{content:""; position:absolute; top:3px; right:3px; width:4px; height:4px; border-radius:50%; background:var(--red); opacity:.85; pointer-events:none}
+.tee td.hole[data-strokes="2"]:not(.has)::after{content:""; position:absolute; top:3px; right:9px; width:4px; height:4px; border-radius:50%; background:var(--red); opacity:.85; pointer-events:none}
 .tee .s{
-  width:100%; height:38px; border:1.5px solid transparent; border-radius:3px; background:none;
-  color:var(--ink); font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:16px;
-  text-align:center; padding:0; -moz-appearance:textfield; appearance:textfield;
+  width:100%; height:38px; border:0; background:none; padding:0; position:relative;
+  display:flex; align-items:center; justify-content:center;
+  color:var(--ink); font-family:var(--mono); font-variant-numeric:tabular-nums;
+  cursor:pointer; -webkit-appearance:none; appearance:none;
 }
-.tee .s{cursor:pointer; font-weight:500}
 .tee .s:hover{background:var(--card-2)}
-/* Only the scores worth spotting get a mark: birdies and blow-ups. Marking every
-   bogey turns a card full of mid-handicaps into an unreadable grid of boxes. */
-.tee .s.bird{border-color:var(--red); border-radius:50%; color:var(--red); font-weight:700}
-.tee .s.eagle{border-color:var(--red); border-radius:50%; color:var(--red); font-weight:700; box-shadow:0 0 0 1.5px var(--card),0 0 0 3px var(--red)}
-.tee .s.dbl{border-color:var(--ink-3); border-radius:2px; color:var(--ink-2)}
-.tee .s.edit{background:var(--dirty-bg); border-color:var(--dirty); font-weight:700}
+/* the mark hugs the number, the way it is drawn on paper */
+.tee .s .g{
+  display:inline-flex; align-items:center; justify-content:center; box-sizing:border-box;
+  min-width:21px; height:21px; padding:0 1px; line-height:1;
+  border:1.5px solid transparent; border-radius:3px; font-size:15px; font-weight:500;
+}
+.tee .s.bird .g{border-color:var(--red); border-radius:50%; color:var(--red); font-weight:700}
+.tee .s.eagle .g{border-color:var(--red); border-radius:50%; color:var(--red); font-weight:700;
+  box-shadow:0 0 0 1.5px var(--card),0 0 0 3px var(--red)}
+.tee .s.bog .g{border-color:var(--ink-2); border-radius:2px}
+.tee .s.dbl .g{border-color:var(--ink-2); border-radius:2px;
+  box-shadow:0 0 0 1.5px var(--card),0 0 0 3px var(--ink-2)}
+.tee .s .n{
+  position:absolute; right:1px; bottom:1px; font-style:normal; font-weight:700;
+  font-size:9px; line-height:1; color:var(--red); background:var(--card);
+  border-radius:2px; padding:0 1px;
+}
+.tee .s.edit{background:var(--dirty-bg)}
+.tee .s.edit .g{border-color:var(--dirty); font-weight:700}
+.tee .s.edit .n{background:var(--dirty-bg)}
 .savebar{
   position:sticky; bottom:0; z-index:12; display:flex; gap:9px; align-items:center; flex-wrap:wrap;
   padding:11px 14px calc(11px + env(safe-area-inset-bottom,0px));
@@ -222,13 +251,13 @@ table{border-collapse:collapse; width:100%}
 .banner.warn{border-left-color:var(--red)}
 .banner b{color:var(--ink)}
 .banner.inset{margin:14px 14px 0}
-.legend{display:flex; flex-wrap:wrap; gap:14px; padding:11px 14px; border-top:1px solid var(--line-2); font-size:11.5px; color:var(--ink-3); align-items:center}
-.legend span{display:flex; align-items:center; gap:6px}
-.lg{display:inline-block; width:17px; height:17px; border:1.5px solid var(--ink-3); font-size:0}
-.lg.bird{border-color:var(--red); border-radius:50%}
-.lg.bog{border-radius:2px}
-.lg.strk{border:0; position:relative; width:10px; height:10px}
-.lg.strk::before{content:""; position:absolute; inset:0; margin:auto; width:5px; height:5px; border-radius:50%; background:var(--red)}
+.note{padding:11px 14px; border-top:1px solid var(--line-2); font-size:12px; color:var(--ink-2); line-height:1.5}
+.note b{color:var(--ink)}
+.note.pad{border-top:0; padding:0 16px 2px; font-size:11.5px; color:var(--ink-3)}
+.cardfoot{display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:11px 14px; border-top:1px solid var(--line-2)}
+.cardfoot .cnt{font-size:12px; color:var(--ink-2)}
+.btn.danger{border-color:var(--red); background:var(--card); color:var(--red)}
+.btn.danger.armed{background:var(--red); color:#fff}
 
 /* ---------- the edit passcode ---------- */
 .gateb{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
@@ -576,15 +605,18 @@ footer{max-width:1100px; margin:0 auto; padding:4px 16px 40px; font-size:11.5px;
       </div>
       <div class="teewrap" id="teeWrap"><table class="tee" id="teeGrid"></table></div>
       <div class="savebar">
-        <span class="cnt" id="dirtyCount">Tap a cell and type a gross score.</span>
+        <span class="cnt" id="dirtyCount">Tap any hole to open the score pad.</span>
         <button class="btn ghost sm" id="discardBtn" disabled>Discard</button>
         <button class="btn sm" id="saveBtn" disabled>Post scores</button>
       </div>
       <div class="msg" id="saveMsg"></div>
-      <div class="legend">
-        <span><i class="lg bird"></i> birdie or better</span>
-        <span><i class="lg bog"></i> double bogey or worse</span>
-        <span><i class="lg strk"></i> gets a stroke</span>
+      <div class="note">
+        Enter <b>gross strokes only</b> &mdash; every handicap stroke is taken off for you.
+        A hole where you stroke shows the gross with your net in the corner.
+      </div>
+      <div class="cardfoot">
+        <button type="button" class="btn danger sm" id="resetBtn">Reset all scores</button>
+        <span class="cnt" id="resetMsg"></span>
       </div>
     </div>
 
@@ -706,6 +738,7 @@ footer{max-width:1100px; margin:0 auto; padding:4px 16px 40px; font-size:11.5px;
       <div class="holestrip" id="holeStrip"></div>
       <div class="slidewrap"><div class="plays" id="playRows"></div></div>
     </div>
+    <div class="note pad">Gross strokes only &mdash; handicaps are applied for you.</div>
     <div class="holeactions">
       <span class="cnt" id="holeCnt"></span>
       <button class="btn ghost sm" id="holeDiscard" disabled>Discard</button>
@@ -815,6 +848,15 @@ function sideSize(){ return NSLOT/(state.mode||2); }
 function defaultMatchups(mode){
   return (MATCHUPS[mode]||MATCHUPS[2]).map(function(p){ return p.slice(); });
 }
+/* The saved draw wins for the mode it was saved in; any other mode falls back to
+   the canonical pairing. Keeps a wiped room from reopening on a draw nobody set. */
+function defaultMatchupsFor(mode){
+  if(mode===DEFAULT_MODE){
+    var mu=unflatten(DEFAULT_MU,mode);
+    if(matchupsValid(mu,mode)) return mu;
+  }
+  return defaultMatchups(mode);
+}
 /* Stored flat as eight codes, because Realtime Database turns nested arrays
    into objects and back unpredictably. */
 function flatten(mu){
@@ -857,14 +899,18 @@ function teeTime(m){
   return h12+":"+(mi<10?"0":"")+mi+" "+ap;
 }
 
+var DEFAULT_MODE=4;
+var DEFAULT_MU=["n","c","g","d","n","d","g","c"];
 var DEFAULT_TEAMS={
-  alec:"n", zach:"n", camden:"n", will:"n", brett:"n", josh:"n", lee:"n", jack:"n",
-  kallan:"g", stephen:"g", johng:"g", sam:"g", blake:"g", towner:"g", brady:"g", rob:"g"
+  camden:"n", stephen:"n", johng:"c", lee:"c",
+  rob:"g", kallan:"g", brett:"d", josh:"d",
+  will:"n", blake:"n", alec:"d", sam:"d",
+  towner:"g", brady:"g", zach:"c", jack:"c"
 };
-var DEFAULT_SLOTS=["alec","zach","kallan","stephen",
-                   "camden","will","johng","sam",
-                   "brett","josh","blake","towner",
-                   "lee","jack","brady","rob"];
+var DEFAULT_SLOTS=["camden", "stephen", "johng", "lee",
+                   "rob", "kallan", "brett", "josh",
+                   "will", "blake", "alec", "sam",
+                   "towner", "brady", "zach", "jack"];
 
 /* tee-time slot layout: match m holds 4m..4m+3 — first two are Team 1, last two Team 2 */
 function slotTeam(i){ return slotTeamIn(i,null); }
@@ -900,7 +946,7 @@ function blankGross(){
   });
   return g;
 }
-var state={v:7,mode:2,matchups:defaultMatchups(2),teams:{},slots:[],locked:false,roster:{},gross:blankGross()};
+var state={v:7,mode:DEFAULT_MODE,matchups:defaultMatchupsFor(DEFAULT_MODE),teams:{},slots:[],locked:false,roster:{},gross:blankGross()};
 P.forEach(function(p){ state.teams[p.id]=DEFAULT_TEAMS[p.id]||null; });
 for(var _i=0;_i<NSLOT;_i++) state.slots.push(DEFAULT_SLOTS[_i]||null);
 
@@ -1010,7 +1056,7 @@ function tally(pid){
     last=h+1;                 /* the furthest hole they have actually posted */
   }
   return {played:played,gross:gross,net:net,par:par,bird:bird,out:out,inn:inn,
-          done:done,last:last,toPar:net-par};
+          done:done,last:last,toPar:net-par,toParGross:gross-par};
 }
 function anyScores(){
   return P.some(function(p){ return state.gross[p.id].some(function(v){ return v!==null; }); });
@@ -1027,10 +1073,14 @@ function matchState(m){
     if(h<9) fP++; else bP++;
     if(a<c) seg[0]++; else if(c<a) seg[1]++;
   }
+  /* One match, one result: 4 for the win, 2 apiece for a halve, nothing for the
+     loss. Front and back are still counted for the card, but they do not pay. */
   var won=[f[0]+b[0],f[1]+b[1]], pts=[0,0];
-  if(fP>0){ if(f[0]>f[1]) pts[0]+=1; else if(f[1]>f[0]) pts[1]+=1; else { pts[0]+=0.5; pts[1]+=0.5; } }
-  if(bP>0){ if(b[0]>b[1]) pts[0]+=1; else if(b[1]>b[0]) pts[1]+=1; else { pts[0]+=0.5; pts[1]+=0.5; } }
-  if(played>0){ if(won[0]>won[1]) pts[0]+=2; else if(won[1]>won[0]) pts[1]+=2; else { pts[0]+=1; pts[1]+=1; } }
+  if(played>0){
+    if(won[0]>won[1]) pts[0]=4;
+    else if(won[1]>won[0]) pts[1]=4;
+    else { pts[0]=2; pts[1]=2; }
+  }
   return {f:f,b:b,won:won,pts:pts,played:played,fPlayed:fP,bPlayed:bP,ready:true};
 }
 
@@ -1402,26 +1452,62 @@ function renderStandings(c){
 function renderBoard(c){ renderStandings(c); renderInd(c); renderLedger(c); }
 
 /* ---------- the scorecard grid ---------- */
+/* The marks a paper card uses: two rings for an eagle, one for a birdie,
+   nothing for a par, one box for a bogey, two from a double onward. Read off
+   the gross score, the way they are written by hand. */
 function shapeFor(v,h){
   if(v===null) return "";
   var d=v-PAR[h];
   if(d<=-2) return "eagle";
   if(d===-1) return "bird";
+  if(d===1) return "bog";
   if(d>=2) return "dbl";
   return "";
 }
+/* One place builds a score cell, so the first paint and every repaint agree.
+   A hole where the player strokes carries the net in the corner; until a score
+   is in, the red pips still say a stroke is coming. */
 function paintCell(cell){
   var pid=cell.getAttribute("data-pid"), h=+cell.getAttribute("data-hole");
-  var v=state.gross[pid][h];
+  var p=BY[pid], v=state.gross[pid][h], st=strokeOn(p,h);
   cell.className="s "+shapeFor(v,h)+(isEdited(pid,h)?" edit":"");
-  cell.textContent=v===null?"":String(v);
+  cell.textContent="";
+  if(v!==null){
+    cell.appendChild(el("b","g",String(v)));
+    if(st) cell.appendChild(el("i","n",String(v-st)));
+  }
+  var td=cell.parentNode;
+  if(td&&td.classList) td.classList[v===null?"remove":"add"]("has");
+  cell.setAttribute("aria-label",p.name+", hole "+(h+1)+", par "+PAR[h]+
+    (v===null?", no score":", gross "+v+(st?", net "+(v-st):""))+
+    (st?(st>1?", gets two strokes":", gets a stroke"):"")+
+    ". Opens the score pad.");
 }
+/* Sticky columns need the offset of the column before them, and the table
+   decides those widths, not the stylesheet. */
+function syncFrozen(){
+  var t=byId("teeGrid");
+  var c1=t.querySelector(".c1"), c2=t.querySelector(".c2");
+  if(!c1||!c2) return;
+  var w1=Math.round(c1.getBoundingClientRect().width);
+  var w2=Math.round(c2.getBoundingClientRect().width);
+  if(!w1||!w2) return;
+  t.style.setProperty("--fx2",w1+"px");
+  t.style.setProperty("--fx3",(w1+w2)+"px");
+}
+window.addEventListener("resize",syncFrozen);
+
 function refreshRow(pid){
   var t=tally(pid);
   var tp=document.querySelector('[data-topar="'+pid+'"]');
   if(tp){
     tp.textContent=t.played?toPar(t.toPar):"–";
     tp.className="topar"+(t.played?(t.toPar<0?" under":""):" none");
+  }
+  var gp=document.querySelector('[data-topargross="'+pid+'"]');
+  if(gp){
+    gp.textContent=t.played?toPar(t.toParGross):"–";
+    gp.className="topar gr"+(t.played?(t.toParGross<0?" under":""):" none");
   }
   function set(k,val){
     var c=document.querySelector('[data-'+k+'="'+pid+'"]');
@@ -1443,7 +1529,7 @@ function refreshSaveBar(){
     c.appendChild(el("b",null,String(n)));
     c.appendChild(document.createTextNode(" unsaved change"+(n===1?"":"s")));
   }else{
-    c.textContent="Tap a cell and type a gross score.";
+    c.textContent="Tap any hole to open the score pad. Gross strokes only.";
   }
   byId("teeFlag").hidden=!(n||assignedCount(state.slots)<NSLOT);
 }
@@ -1582,10 +1668,11 @@ function closeLb(){
 function renderTeeGrid(){
   var t=byId("teeGrid");
   t.textContent="";
-  var COLS=23;
+  var COLS=24;
   var thead=el("thead"), hr=el("tr");
   hr.appendChild(el("th","fx c1","Player"));
-  hr.appendChild(el("th","fx c2","Net ±"));
+  hr.appendChild(el("th","fx c2","Gross ±"));
+  hr.appendChild(el("th","fx c3","Net ±"));
   for(var h=1;h<=18;h++) hr.appendChild(el("th",null,String(h)));
   hr.appendChild(el("th","tot","Out"));
   hr.appendChild(el("th","tot","In"));
@@ -1594,6 +1681,7 @@ function renderTeeGrid(){
   var pr=el("tr","parrow");
   pr.appendChild(el("th","fx c1","Par"));
   pr.appendChild(el("th","fx c2",""));
+  pr.appendChild(el("th","fx c3",""));
   PAR.forEach(function(p){ pr.appendChild(el("td",null,String(p))); });
   pr.appendChild(el("td","tot",String(OUT_PAR)));
   pr.appendChild(el("td","tot",String(IN_PAR)));
@@ -1620,37 +1708,41 @@ function renderTeeGrid(){
 
   groups.forEach(function(gr){
     var g=el("tr","grp");
-    var gh=el("th",null,gr.label); gh.colSpan=2; g.appendChild(gh);
-    var gi=el("td",null,gr.info); gi.colSpan=COLS-2; g.appendChild(gi);
+    var gh=el("th",null,gr.label); gh.colSpan=3; g.appendChild(gh);
+    var gi=el("td",null,gr.info); gi.colSpan=COLS-3; g.appendChild(gi);
     tb.appendChild(g);
     gr.rows.forEach(function(r){
       var p=BY[r.id], tr=el("tr",r.team);
       var c1=el("td","fx c1 pcell");
-      c1.appendChild(el("b",null,p.name));
+      /* a scorecard column is not the place for a full name; clipping one with
+         an ellipsis reads worse than the short form everyone uses anyway */
+      c1.appendChild(el("b",null,shortName(p.name)));
       c1.appendChild(el("span",null,"hcp "+p.str));
       tr.appendChild(c1);
       var tl=tally(p.id);
       var c2=el("td","fx c2");
+      var gp=el("span","topar gr"+(tl.played?(tl.toParGross<0?" under":""):" none"),
+                tl.played?toPar(tl.toParGross):"–");
+      gp.setAttribute("data-topargross",p.id);
+      c2.appendChild(gp);
+      tr.appendChild(c2);
+      var c3=el("td","fx c3");
       var tp=el("span","topar"+(tl.played?(tl.toPar<0?" under":""):" none"),tl.played?toPar(tl.toPar):"–");
       tp.setAttribute("data-topar",p.id);
-      c2.appendChild(tp);
-      tr.appendChild(c2);
+      c3.appendChild(tp);
+      tr.appendChild(c3);
       for(var h=0;h<18;h++){
         (function(h){
           var st=strokeOn(p,h);
           var td=el("td","hole"+(st?" strk":""));
           if(st>1) td.setAttribute("data-strokes","2");
-          var v=state.gross[p.id][h];
-          var b2=el("button","s "+shapeFor(v,h)+(isEdited(p.id,h)?" edit":""));
+          var b2=el("button","s");
           b2.type="button";
           b2.setAttribute("data-pid",p.id);
           b2.setAttribute("data-hole",String(h));
-          b2.textContent=v===null?"":String(v);
-          b2.setAttribute("aria-label",p.name+", hole "+(h+1)+", par "+PAR[h]+
-            (v===null?", no score":", "+v)+(st?(st>1?", gets two strokes":", gets a stroke"):"")+
-            ". Opens the score pad.");
           b2.addEventListener("click",function(){ openSheet(h,p.id); });
           td.appendChild(b2);
+          paintCell(b2);
           tr.appendChild(td);
         })(h);
       }
@@ -1666,6 +1758,7 @@ function renderTeeGrid(){
     });
   });
   t.appendChild(tb);
+  syncFrozen();
 }
 
 function repaintAll(){
@@ -2421,6 +2514,10 @@ function commit(patch,msgId){
   /* One flat multi-path update. Two groups posting different holes touch
      different paths, so they cannot overwrite each other. */
   var up={};
+  if(patch.wipe){
+    /* one path, so a reset cannot land half-applied on anybody's phone */
+    up["gross"]=null;
+  }
   if(patch.cells){
     patch.cells.forEach(function(c){ up["gross/"+c.pid+"/"+c.hole]=c.val; });
   }
@@ -2569,6 +2666,39 @@ byId("lockBtn").addEventListener("click",function(){
   if(state.locked) resyncDrafts();
   render();
   commit({locked:state.locked},"teamMsg");
+});
+
+/* Wiping sixteen cards for everybody is worth asking twice about. */
+var resetArmed=0, resetTimer=null;
+function disarmReset(){
+  resetArmed=0;
+  if(resetTimer){ clearTimeout(resetTimer); resetTimer=null; }
+  var b=byId("resetBtn");
+  b.className="btn danger sm";
+  b.textContent="Reset all scores";
+}
+byId("resetBtn").addEventListener("click",function(){
+  needEdit(function(){
+    if(saving) return;
+    if(!resetArmed){
+      resetArmed=1;
+      var b=byId("resetBtn");
+      b.className="btn danger sm armed";
+      b.textContent="Tap again to wipe every card";
+      msg("resetMsg","This clears all sixteen scorecards, for everyone.","err");
+      resetTimer=setTimeout(function(){ disarmReset(); msg("resetMsg","",""); },6000);
+      return;
+    }
+    disarmReset();
+    P.forEach(function(p){
+      var row=[];
+      for(var h=0;h<18;h++) row.push(null);
+      state.gross[p.id]=row;
+      savedGross[p.id]=row.slice();
+    });
+    render();
+    commit({wipe:true},"resetMsg");
+  });
 });
 
 byId("rosterToggle").addEventListener("click",function(){
@@ -2741,7 +2871,7 @@ window.__shootout={
     setConn(up?(everSynced?"Live":"Live"):"Offline");
     if(!up) setConn("Offline");
   },
-  seed:function(){ return {mode:2,matchups:flatten(defaultMatchups(2)),
+  seed:function(){ return {mode:DEFAULT_MODE,matchups:flatten(defaultMatchupsFor(DEFAULT_MODE)),
                            teams:DEFAULT_STATE.teams,slots:DEFAULT_STATE.slots,
                            locked:false}; },
   fail:function(m){

@@ -73,7 +73,7 @@ function blankGross(){
   });
   return g;
 }
-var state={v:7,mode:2,matchups:defaultMatchups(2),teams:{},slots:[],locked:false,roster:{},gross:blankGross()};
+var state={v:7,mode:DEFAULT_MODE,matchups:defaultMatchupsFor(DEFAULT_MODE),teams:{},slots:[],locked:false,roster:{},gross:blankGross()};
 P.forEach(function(p){ state.teams[p.id]=DEFAULT_TEAMS[p.id]||null; });
 for(var _i=0;_i<NSLOT;_i++) state.slots.push(DEFAULT_SLOTS[_i]||null);
 
@@ -158,6 +158,10 @@ function commit(patch,msgId){
   /* One flat multi-path update. Two groups posting different holes touch
      different paths, so they cannot overwrite each other. */
   var up={};
+  if(patch.wipe){
+    /* one path, so a reset cannot land half-applied on anybody's phone */
+    up["gross"]=null;
+  }
   if(patch.cells){
     patch.cells.forEach(function(c){ up["gross/"+c.pid+"/"+c.hole]=c.val; });
   }
@@ -234,7 +238,7 @@ window.__shootout={
     setConn(up?(everSynced?"Live":"Live"):"Offline");
     if(!up) setConn("Offline");
   },
-  seed:function(){ return {mode:2,matchups:flatten(defaultMatchups(2)),
+  seed:function(){ return {mode:DEFAULT_MODE,matchups:flatten(defaultMatchupsFor(DEFAULT_MODE)),
                            teams:DEFAULT_STATE.teams,slots:DEFAULT_STATE.slots,
                            locked:false}; },
   fail:function(m){

@@ -89,11 +89,11 @@ for m in range(4):
         if a < c: seg[0] += 1
         elif c < a: seg[1] += 1
     won = [f[0] + b[0], f[1] + b[1]]
+    # one match, one result: 4 for the win, 2 apiece for a halve, 0 for the loss
     mp = [0.0, 0.0]
-    for arr, worth in ((f, 1), (b, 1), (won, 2)):
-        if arr[0] > arr[1]: mp[0] += worth
-        elif arr[1] > arr[0]: mp[1] += worth
-        else: mp[0] += worth / 2.0; mp[1] += worth / 2.0
+    if won[0] > won[1]: mp[0] = 4.0
+    elif won[1] > won[0]: mp[1] = 4.0
+    else: mp[0] = 2.0; mp[1] = 2.0
     pts[0] += mp[0]; pts[1] += mp[1]
     detail.append((m + 1, f, b, won, mp))
 
@@ -186,13 +186,9 @@ for m, (ta, tb) in enumerate(MU4):
         elif b_net < a_net: seg[1] += 1
     won = [f[0] + b_[0], f[1] + b_[1]]
     mp = [0.0, 0.0]
-    for seg in (f, b_):
-        if seg[0] > seg[1]: mp[0] += 1
-        elif seg[1] > seg[0]: mp[1] += 1
-        else: mp[0] += 0.5; mp[1] += 0.5
-    if won[0] > won[1]: mp[0] += 2
-    elif won[1] > won[0]: mp[1] += 2
-    else: mp[0] += 1; mp[1] += 1
+    if won[0] > won[1]: mp[0] = 4.0
+    elif won[1] > won[0]: mp[1] = 4.0
+    else: mp[0] = 2.0; mp[1] = 2.0
     four_pts[ta] += mp[0]
     four_pts[tb] += mp[1]
 

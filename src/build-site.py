@@ -73,7 +73,7 @@ function blankGross(){
   });
   return g;
 }
-var state={v:5,teams:{},slots:[],locked:false,roster:{},gross:blankGross()};
+var state={v:6,mode:2,teams:{},slots:[],locked:false,roster:{},gross:blankGross()};
 P.forEach(function(p){ state.teams[p.id]=DEFAULT_TEAMS[p.id]||null; });
 for(var _i=0;_i<NSLOT;_i++) state.slots.push(DEFAULT_SLOTS[_i]||null);
 
@@ -95,10 +95,12 @@ applyRoster();
    entries and turns sparse arrays into objects, so both shapes are handled. */
 function applyRemote(raw){
   raw=raw||{};
+  state.mode=(raw.mode===4)?4:2;
+  var allow=SIDES[state.mode];
   var t=raw.teams||{};
   P.forEach(function(p){
     var v=t[p.id];
-    state.teams[p.id]=(v==="n"||v==="g")?v:null;
+    state.teams[p.id]=(allow.indexOf(v)>=0)?v:null;
   });
   var sl=raw.slots||{};
   for(var i=0;i<NSLOT;i++){
@@ -161,6 +163,7 @@ function commit(patch,msgId){
     for(var i=0;i<NSLOT;i++) up["slots/"+i]=patch.slots[i]||null;
   }
   if(typeof patch.locked==="boolean") up["locked"]=patch.locked;
+  if(patch.mode) up["mode"]=patch.mode;
   if(patch.roster){
     P.forEach(function(p){
       var o=patch.roster[p.id];
@@ -218,7 +221,7 @@ window.__shootout={
     setConn(up?(everSynced?"Live":"Live"):"Offline");
     if(!up) setConn("Offline");
   },
-  seed:function(){ return {teams:DEFAULT_STATE.teams,slots:DEFAULT_STATE.slots,
+  seed:function(){ return {mode:2,teams:DEFAULT_STATE.teams,slots:DEFAULT_STATE.slots,
                            locked:false}; },
   fail:function(m){
     setConn("Offline");

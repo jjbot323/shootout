@@ -20,6 +20,8 @@
   --line:#DBE1DC; --line-2:#EAEFEB; --shadow:rgba(0,0,0,.07);
   --t1:#006747; --t1-ink:#004D35; --t1-soft:#DCEBE4;
   --t2:#8A6D10; --t2-ink:#6B5309; --t2-soft:#F7F0D9;
+  --t3:#6B3FA0; --t3-ink:#54307F; --t3-soft:#EDE6F7;
+  --t4:#17667F; --t4-ink:#0F4E62; --t4-soft:#DFF0F5;
   --band:#006747; --band-ink:#FFFFFF; --btn-ink:#FFFFFF;
   --red:#C0392B; --good:#006747; --dirty:#8A6D10; --dirty-bg:#FDF6E0;
   --board:#006747; --board-2:#004D35; --board-ink:#FFFFFF;
@@ -103,6 +105,8 @@ table{border-collapse:collapse; width:100%}
 .ledger .pt{width:54px; text-align:center; font-family:var(--mono); font-variant-numeric:tabular-nums; font-weight:600; font-size:15px}
 .ledger .pt.n{color:var(--t1)}
 .ledger .pt.g{color:var(--t2)}
+.ledger .pt.c{color:var(--t3)}
+.ledger .pt.d{color:var(--t4)}
 .ledger .pt.z{color:var(--ink-3); font-weight:400}
 .ledger .lbl{font-size:13.5px}
 .ledger .sub{display:block; font-size:11.5px; color:var(--ink-3); margin-top:2px}
@@ -132,12 +136,16 @@ table{border-collapse:collapse; width:100%}
 .ind .tm{font-size:11px; letter-spacing:.05em; text-transform:uppercase; font-weight:700; white-space:nowrap}
 .ind .tm.n{color:var(--t1)}
 .ind .tm.g{color:var(--t2)}
+.ind .tm.c{color:var(--t3)}
+.ind .tm.d{color:var(--t4)}
 /* the swatch beside the name already carries the side, so the column goes first
    when there is no room for it */
 @media (max-width:560px){.ind .tmcol{display:none}}
 .swatch{display:inline-block; width:7px; height:7px; border-radius:2px; margin-right:7px; vertical-align:1px; background:var(--ink-3)}
 .swatch.n{background:var(--t1)}
 .swatch.g{background:var(--t2)}
+.swatch.c{background:var(--t3)}
+.swatch.d{background:var(--t4)}
 .dim{color:var(--ink-3)}
 .under{color:var(--red); font-weight:600}
 .dim{color:var(--ink-3)}
@@ -161,6 +169,8 @@ table{border-collapse:collapse; width:100%}
 .tee .pcell span{font-size:10.5px; color:var(--ink-3); font-family:var(--mono)}
 .tee tr.n .c1{box-shadow:inset 3px 0 0 var(--t1)}
 .tee tr.g .c1{box-shadow:inset 3px 0 0 var(--t2)}
+.tee tr.c .c1{box-shadow:inset 3px 0 0 var(--t3)}
+.tee tr.d .c1{box-shadow:inset 3px 0 0 var(--t4)}
 .tee .topar{font-weight:700; font-size:13px; color:var(--ink-2)}
 .tee .topar.under{color:var(--red)}
 .tee .topar.none{color:var(--ink-3); font-weight:400}
@@ -242,9 +252,13 @@ table{border-collapse:collapse; width:100%}
 .lb-score b{font-size:24px; font-weight:700; line-height:1}
 .lb-score b.n{color:var(--t1)}
 .lb-score b.g{color:var(--t2)}
+.lb-score b.c{color:var(--t3)}
+.lb-score b.d{color:var(--t4)}
 .lb-score i{font-style:normal; font-family:var(--sans); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; font-weight:700}
 .lb-score i.n{color:var(--t1)}
 .lb-score i.g{color:var(--t2)}
+.lb-score i.c{color:var(--t3)}
+.lb-score i.d{color:var(--t4)}
 .lb-score em{font-style:normal; color:var(--ink-3); font-size:18px}
 .lb-sub{font-size:11.5px; color:var(--ink-3)}
 .lb-sub b{font-family:var(--mono); color:var(--ink-2)}
@@ -311,6 +325,8 @@ table{border-collapse:collapse; width:100%}
   .play{padding:9px 10px 10px; box-shadow:none; border-top:3px solid transparent}
   .play.n{border-top-color:var(--t1)}
   .play.g{border-top-color:var(--t2)}
+  .play.c{border-top-color:var(--t3)}
+  .play.d{border-top-color:var(--t4)}
   .play:nth-child(odd){border-right:1px solid var(--line-2)}
   .pl b{font-size:13.5px}
   .pl em{font-size:10.5px}
@@ -364,6 +380,8 @@ table{border-collapse:collapse; width:100%}
 .dnames{font-size:12.5px; line-height:1.45; min-width:0}
 .dnames .t1{color:var(--t1-ink); font-weight:600}
 .dnames .t2{color:var(--t2-ink); font-weight:600}
+.dnames .t3{color:var(--t3-ink); font-weight:600}
+.dnames .t4{color:var(--t4-ink); font-weight:600}
 .dnames .vs{color:var(--ink-3); font-weight:400; margin:0 5px}
 
 /* ---------- balance readout, shared by both setup tabs ---------- */
@@ -381,9 +399,28 @@ table{border-collapse:collapse; width:100%}
 /* ---------- teams tab: drag and drop ---------- */
 .dnd{display:grid; gap:10px; padding:14px}
 .zrow{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.modesw{display:flex; align-items:center; gap:8px; padding:12px 14px 0}
+.modesw span{font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; font-weight:700; color:var(--ink-3)}
+.modeseg{display:flex; border:1px solid var(--line); border-radius:6px; overflow:hidden}
+.modeseg button{
+  background:var(--card); border:0; padding:8px 15px; font-family:inherit; font-size:12.5px;
+  font-weight:700; letter-spacing:.06em; color:var(--ink-2); min-height:38px;
+}
+.modeseg button+button{border-left:1px solid var(--line)}
+.modeseg button[aria-pressed="true"]{background:var(--brand); color:var(--btn-ink)}
+.stand{display:grid; gap:0}
+.strow{display:grid; grid-template-columns:26px 1fr auto; gap:10px; align-items:center; padding:8px 12px; border-bottom:1px solid var(--line-2)}
+.strow:last-child{border-bottom:0}
+.strow .rk{font-family:var(--mono); font-size:12px; color:var(--ink-3)}
+.strow .nm{font-size:12.5px; letter-spacing:.06em; text-transform:uppercase; font-weight:700}
+.strow.n .nm{color:var(--t1)} .strow.g .nm{color:var(--t2)}
+.strow.c .nm{color:var(--t3)} .strow.d .nm{color:var(--t4)}
+.strow .pt{font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:17px; font-weight:700}
 .zone{border:1.5px dashed var(--line); border-radius:6px; background:var(--card-2); display:flex; flex-direction:column}
 .zone.n{border-color:color-mix(in srgb,var(--t1) 40%,var(--line))}
 .zone.g{border-color:color-mix(in srgb,var(--t2) 40%,var(--line))}
+.zone.c{border-color:color-mix(in srgb,var(--t3) 40%,var(--line))}
+.zone.d{border-color:color-mix(in srgb,var(--t4) 40%,var(--line))}
 .zone.over{background:var(--paper); border-style:solid; box-shadow:inset 0 0 0 2px var(--brand)}
 .zone.n.over{box-shadow:inset 0 0 0 2px var(--t1)}
 .zone.g.over{box-shadow:inset 0 0 0 2px var(--t2)}
@@ -394,6 +431,8 @@ table{border-collapse:collapse; width:100%}
 }
 .zone.n .zhead{color:var(--t1)}
 .zone.g .zhead{color:var(--t2)}
+.zone.c .zhead{color:var(--t3)}
+.zone.d .zhead{color:var(--t4)}
 .zhead .zc{font-family:var(--mono); font-size:12px; letter-spacing:0}
 .zhead .zc.bad{color:var(--red)}
 .chips{display:flex; flex-wrap:wrap; gap:6px; padding:0 8px 8px; align-content:flex-start; flex:1}
@@ -409,6 +448,8 @@ table{border-collapse:collapse; width:100%}
 .chip i{font-style:normal; font-family:var(--mono); font-size:10.5px; font-weight:400; color:var(--ink-3); margin-left:auto}
 .chip.n{border-left:3px solid var(--t1)}
 .chip.g{border-left:3px solid var(--t2)}
+.chip.c{border-left:3px solid var(--t3)}
+.chip.d{border-left:3px solid var(--t4)}
 .chip.dragging{opacity:.3}
 .chip:disabled{cursor:default; touch-action:auto}
 .chip.ghost{
@@ -456,9 +497,13 @@ table{border-collapse:collapse; width:100%}
 .slot:last-of-type{border-bottom:0}
 .slot.n{box-shadow:inset 3px 0 0 var(--t1)}
 .slot.g{box-shadow:inset 3px 0 0 var(--t2)}
+.slot.c{box-shadow:inset 3px 0 0 var(--t3)}
+.slot.d{box-shadow:inset 3px 0 0 var(--t4)}
 .slot .sl{font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; font-weight:700; color:var(--ink-3)}
 .slot.n .sl{color:var(--t1)}
 .slot.g .sl{color:var(--t2)}
+.slot.c .sl{color:var(--t3)}
+.slot.d .sl{color:var(--t4)}
 .slot select{width:100%; height:42px; border:1px solid var(--line); border-radius:5px; background:var(--card); color:var(--ink); font-family:inherit; font-size:16px; padding:0 7px}
 .slot select:disabled{opacity:.6; cursor:default}
 .mfoot{display:flex; border-top:1px solid var(--line); font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); background:var(--card-2)}
@@ -563,12 +608,19 @@ footer{max-width:1100px; margin:0 auto; padding:4px 16px 40px; font-size:11.5px;
     </div>
 
     <div class="card">
-      <div class="card-h"><h2>The two sides</h2><span class="tag" id="teamTag"></span></div>
+      <div class="card-h"><h2 id="sidesTitle">The two sides</h2><span class="tag" id="teamTag"></span></div>
+      <div class="modesw">
+        <span>Teams</span>
+        <div class="modeseg" role="group" aria-label="Number of teams">
+          <button type="button" id="mode2" aria-pressed="true">Two</button>
+          <button type="button" id="mode4" aria-pressed="false">Four</button>
+        </div>
+      </div>
       <div class="card-b">
         <div class="bal">
-          <div class="col n"><span class="lab">Team 1</span><span class="fig" id="balN">0</span><span class="sub" id="balNs">0 players</span></div>
-          <div class="mid"><span>gap</span><b id="balGap">0</b><span>strokes</span></div>
-          <div class="col g r"><span class="lab">Team 2</span><span class="fig" id="balG">0</span><span class="sub" id="balGs">0 players</span></div>
+          <div class="col n"><span class="lab" id="balLabN">Team 1</span><span class="fig" id="balN">0</span><span class="sub" id="balNs">0 players</span></div>
+          <div class="mid"><span>spread</span><b id="balGap">0</b><span>strokes</span></div>
+          <div class="col g r"><span class="lab" id="balLabG">Team 2</span><span class="fig" id="balG">0</span><span class="sub" id="balGs">0 players</span></div>
         </div>
       </div>
       <div class="dnd">
@@ -576,16 +628,7 @@ footer{max-width:1100px; margin:0 auto; padding:4px 16px 40px; font-size:11.5px;
           <div class="zhead"><span>Unassigned</span><span class="zc" id="zcPool">16</span></div>
           <div class="chips" id="zonePool"></div>
         </div>
-        <div class="zrow">
-          <div class="zone n" data-zone="n">
-            <div class="zhead"><span>Team 1</span><span class="zc" id="zcN">0</span></div>
-            <div class="chips" id="zoneN"></div>
-          </div>
-          <div class="zone g" data-zone="g">
-            <div class="zhead"><span>Team 2</span><span class="zc" id="zcG">0</span></div>
-            <div class="chips" id="zoneG"></div>
-          </div>
-        </div>
+        <div class="zrow" id="zoneRow"></div>
       </div>
       <p class="dndhint">Drag a name into either side, or between them. No mouse? Tap a name to send it across, or focus it and press the left and right arrow keys.</p>
       <div class="savebar static">
@@ -640,12 +683,12 @@ footer{max-width:1100px; margin:0 auto; padding:4px 16px 40px; font-size:11.5px;
     <div class="sheet-h">
       <div class="lb-head">
         <b id="lbTitle">Leaderboard</b>
-        <span class="lb-score">
+        <span class="lb-score" id="lbScoreRow">
           <i class="n">Team 1</i><b class="n" id="ptsN">0</b>
           <em>&ndash;</em>
           <b class="g" id="ptsG">0</b><i class="g">Team 2</i>
         </span>
-        <span class="lb-sub"><b id="ptsAwarded">0</b> of 26 awarded &middot; <span id="leadNote">Connecting…</span></span>
+        <span class="lb-sub"><b id="ptsAwarded">0</b> of <span id="ptsTotal">26</span> awarded &middot; <span id="leadNote">Connecting…</span></span>
       </div>
       <button type="button" class="sheet-x" id="lbClose" aria-label="Close the leaderboard">&times;</button>
     </div>
@@ -653,6 +696,10 @@ footer{max-width:1100px; margin:0 auto; padding:4px 16px 40px; font-size:11.5px;
       <div class="card">
         <div class="card-h"><h2>Individual board</h2></div>
         <div class="card-b flush"><div class="scroller"><table class="ind" id="indBoard"></table></div></div>
+      </div>
+      <div class="card" id="standCard" hidden>
+        <div class="card-h"><h2>Team standings</h2></div>
+        <div class="card-b flush"><div class="stand" id="standList"></div></div>
       </div>
       <div class="card">
         <div class="card-h"><h2>Point ledger</h2></div>
@@ -695,9 +742,22 @@ var BY={}; P.forEach(function(p){BY[p.id]=p;});
 function applyHcp(){ P.forEach(function(p){ p.str=p.hcp; }); }
 applyHcp();
 
-var TEAM={n:"Team 1",g:"Team 2"};
+var TEAM={n:"Team 1",g:"Team 2",c:"Team 3",d:"Team 4"};
 function teamName(t){ return TEAM[t]||"unassigned"; }
-var SIDE_SIZE=8, NSLOT=16;
+var NSLOT=16;
+
+/* Two sides or four. In four-team mode each team has four players who split
+   2+2 across two tee times, meeting a different team in each, so every team
+   plays two 2v2 better-ball matches. Four-team mode is match points only. */
+var SIDES={2:["n","g"],4:["n","g","c","d"]};
+var MATCHUPS={
+  2:[["n","g"],["n","g"],["n","g"],["n","g"]],
+  4:[["n","g"],["c","d"],["n","c"],["g","d"]]
+};
+function sides(){ return SIDES[state.mode]||SIDES[2]; }
+function sideSize(){ return NSLOT/(state.mode||2); }
+function matchup(m){ return (MATCHUPS[state.mode]||MATCHUPS[2])[m]; }
+function bonusesApply(){ return state.mode===2; }
 
 /* Match 1 goes off at 10:08, every match after it eight minutes later */
 var TEE_FIRST=10*60+8, TEE_GAP=8;
@@ -718,7 +778,7 @@ var DEFAULT_SLOTS=["alec","zach","kallan","stephen",
                    "lee","jack","brady","rob"];
 
 /* tee-time slot layout: match m holds 4m..4m+3 — first two are Team 1, last two Team 2 */
-function slotTeam(i){ return (i%4)<2?"n":"g"; }
+function slotTeam(i){ return matchup(Math.floor(i/4))[(i%4)<2?0:1]; }
 function slotMatch(i){ return Math.floor(i/4); }
 
 /* A slot may only hold a player who is actually on that side. Whenever the sides
@@ -750,7 +810,7 @@ function blankGross(){
   });
   return g;
 }
-var state={v:5,teams:{},slots:[],locked:false,roster:{},gross:blankGross()};
+var state={v:6,mode:2,teams:{},slots:[],locked:false,roster:{},gross:blankGross()};
 P.forEach(function(p){ state.teams[p.id]=DEFAULT_TEAMS[p.id]||null; });
 for(var _i=0;_i<NSLOT;_i++) state.slots.push(DEFAULT_SLOTS[_i]||null);
 
@@ -772,10 +832,12 @@ applyRoster();
    entries and turns sparse arrays into objects, so both shapes are handled. */
 function applyRemote(raw){
   raw=raw||{};
+  state.mode=(raw.mode===4)?4:2;
+  var allow=SIDES[state.mode];
   var t=raw.teams||{};
   P.forEach(function(p){
     var v=t[p.id];
-    state.teams[p.id]=(v==="n"||v==="g")?v:null;
+    state.teams[p.id]=(allow.indexOf(v)>=0)?v:null;
   });
   var sl=raw.slots||{};
   for(var i=0;i<NSLOT;i++){
@@ -809,14 +871,16 @@ function sideCount(teams,t){
   return P.filter(function(p){ return teams[p.id]===t; }).length;
 }
 function evenSides(teams){
-  return sideCount(teams,"n")===SIDE_SIZE&&sideCount(teams,"g")===SIDE_SIZE;
+  var want=sideSize();
+  return sides().every(function(t){ return sideCount(teams,t)===want; });
 }
 function matchesOf(slots){
   var out=[];
   for(var m=0;m<4;m++){
-    out.push({no:m+1,
-      n:[slots[m*4],slots[m*4+1]].filter(Boolean),
-      g:[slots[m*4+2],slots[m*4+3]].filter(Boolean)});
+    var mu=matchup(m);
+    out.push({no:m+1, tA:mu[0], tB:mu[1],
+      a:[slots[m*4],slots[m*4+1]].filter(Boolean),
+      b:[slots[m*4+2],slots[m*4+3]].filter(Boolean)});
   }
   return out;
 }
@@ -859,9 +923,9 @@ function anyScores(){
 
 function matchState(m){
   var f=[0,0], b=[0,0], played=0, fP=0, bP=0;
-  if(!m.n.length||!m.g.length) return {f:f,b:b,won:[0,0],pts:[0,0],played:0,fPlayed:0,bPlayed:0,ready:false};
+  if(!m.a.length||!m.b.length) return {f:f,b:b,won:[0,0],pts:[0,0],played:0,fPlayed:0,bPlayed:0,ready:false};
   for(var h=0;h<18;h++){
-    var a=bestNet(m.n,h), c=bestNet(m.g,h);
+    var a=bestNet(m.a,h), c=bestNet(m.b,h);
     if(a===null||c===null) continue;
     played++;
     var seg=h<9?f:b;
@@ -876,12 +940,16 @@ function matchState(m){
 }
 
 function compute(){
-  var pts=[0,0], awarded=0;
+  /* Points live in a map keyed by side, so two-team and four-team share one path. */
+  var pts={}, awarded=0;
+  sides().forEach(function(t){ pts[t]=0; });
   var ms=matchesOf(state.slots).map(function(m){
-    var s=matchState(m);
-    pts[0]+=s.pts[0]; pts[1]+=s.pts[1]; awarded+=s.pts[0]+s.pts[1];
-    return {m:m,s:s};
+    var st=matchState(m);
+    pts[m.tA]+=st.pts[0]; pts[m.tB]+=st.pts[1];
+    awarded+=st.pts[0]+st.pts[1];
+    return {m:m,s:st};
   });
+
   var tallies={}; P.forEach(function(p){ tallies[p.id]=tally(p.id); });
   var field=P.filter(function(p){ return teamOf(p.id); }).map(function(p){ return p.id; });
   var allDone=field.length>0&&field.every(function(id){ return tallies[id].done; });
@@ -894,8 +962,6 @@ function compute(){
     if(low?b<a:b>a) return [0,w];
     return [w/2,w/2];
   }
-  /* Only finished rounds can win a round title — an untouched card sums to net 0
-     and would otherwise tie a dozen players for the lead. */
   var finished=field.filter(function(id){ return tallies[id].done; });
   function bestIndiv(key){
     var lo=Infinity, win=[];
@@ -910,33 +976,46 @@ function compute(){
     return roster(t).filter(function(p){ return tallies[p.id].done; })
                     .map(function(p){ return tallies[p.id].net; });
   }
-  var dnN=doneNets("n"), dnG=doneNets("g");
-  var aggN=low4(dnN), aggG=low4(dnG);
-  var aggReady=dnN.length>=4&&dnG.length>=4;
-  var bn=bestIndiv("net"), bg=bestIndiv("gross");
-  var birdN=sum(listOf("n","bird")), birdG=sum(listOf("g","bird"));
 
-  function nameList(b,unit){
-    if(b.lo===Infinity) return "no round complete yet";
-    var who=b.names.length>3?(b.names.length+" tied"):b.names.join(", ");
-    return who+" · "+unit+" "+b.lo;
+  var bonuses=[], total=16;
+  if(bonusesApply()){
+    var dnN=doneNets("n"), dnG=doneNets("g");
+    var aggN=low4(dnN), aggG=low4(dnG);
+    var aggReady=dnN.length>=4&&dnG.length>=4;
+    var bn=bestIndiv("net"), bg=bestIndiv("gross");
+    var birdN=sum(listOf("n","bird")), birdG=sum(listOf("g","bird"));
+    function nameList(bb,unit){
+      if(bb.lo===Infinity) return "no round complete yet";
+      var who=bb.names.length>3?(bb.names.length+" tied"):bb.names.join(", ");
+      return who+" · "+unit+" "+bb.lo;
+    }
+    bonuses=[
+      {label:"Team aggregate",worth:4,
+       sub:aggReady?("Four lowest net rounds · "+TEAM.n+": "+aggN+" · "+TEAM.g+": "+aggG)
+                   :("Four lowest net rounds · needs 4 finished a side ("+dnN.length+" / "+dnG.length+")"),
+       pts:split(aggN,aggG,4,true)},
+      {label:"Low net round",worth:2,sub:nameList(bn,"net"),
+       pts:bn.n===bn.g?[1,1]:(bn.n>bn.g?[2,0]:[0,2])},
+      {label:"Low gross round",worth:2,sub:nameList(bg,"gross"),
+       pts:bg.n===bg.g?[1,1]:(bg.n>bg.g?[2,0]:[0,2])},
+      {label:"Birdie count",worth:2,sub:TEAM.n+": "+birdN+" · "+TEAM.g+": "+birdG,
+       pts:split(birdN,birdG,2,false)}
+    ];
+    total=26;
+    if(allDone){
+      bonuses.forEach(function(bb){ pts.n+=bb.pts[0]; pts.g+=bb.pts[1]; awarded+=bb.worth; });
+    }
   }
-  var bonuses=[
-    {label:"Team aggregate",worth:4,
-     sub:aggReady?("Four lowest net rounds · "+TEAM.n+": "+aggN+" · "+TEAM.g+": "+aggG)
-                 :("Four lowest net rounds · needs 4 finished a side ("+dnN.length+" / "+dnG.length+")"),
-     pts:split(aggN,aggG,4,true)},
-    {label:"Low net round",worth:2,sub:nameList(bn,"net"),
-     pts:bn.n===bn.g?[1,1]:(bn.n>bn.g?[2,0]:[0,2])},
-    {label:"Low gross round",worth:2,sub:nameList(bg,"gross"),
-     pts:bg.n===bg.g?[1,1]:(bg.n>bg.g?[2,0]:[0,2])},
-    {label:"Birdie count",worth:2,sub:TEAM.n+": "+birdN+" · "+TEAM.g+": "+birdG,
-     pts:split(birdN,birdG,2,false)}
-  ];
-  if(allDone) bonuses.forEach(function(b){ pts[0]+=b.pts[0]; pts[1]+=b.pts[1]; awarded+=b.worth; });
 
-  return {pts:pts,awarded:awarded,ms:ms,tallies:tallies,allDone:allDone,bonuses:bonuses,
-          anyScore:anyScores(),field:field,
+  /* standings, so a four-way race can be ranked */
+  var standings=sides().map(function(t){
+    return {team:t,pts:pts[t],
+            net:sum(listOf(t,"net")),
+            played:sum(listOf(t,"played"))};
+  }).sort(function(x,y){ return y.pts-x.pts||x.net-y.net; });
+
+  return {pts:pts,total:total,awarded:awarded,ms:ms,tallies:tallies,allDone:allDone,
+          bonuses:bonuses,anyScore:anyScores(),field:field,standings:standings,
           aggAllN:sum(listOf("n","net")),aggAllG:sum(listOf("g","net"))};
 }
 
@@ -972,21 +1051,45 @@ function balancedTeams(shuffle){
   P.forEach(function(p){ out[p.id]=null; });
   A.forEach(function(p){ out[p.id]="n"; });
   B.forEach(function(p){ out[p.id]="g"; });
+  if(state.mode===4){
+    /* Split each half again, snaking by handicap, so all four land close. */
+    [["n","c"],["g","d"]].forEach(function(pair){
+      var half=P.filter(function(p){ return out[p.id]===pair[0]; })
+                .sort(function(x,y){ return x.hcp-y.hcp||x.name.localeCompare(y.name); });
+      half.forEach(function(p,i){
+        var back=Math.floor(i/2)%2===1, first=i%2===0;
+        out[p.id]=((back?!first:first)?pair[0]:pair[1]);
+      });
+    });
+  }
   return out;
 }
 
-/* pair each side low-with-high, then match the pairings on combined strokes */
+/* Pair each side low-with-high, then seat those pairs in that side's matches.
+   In four-team mode a side owns two tee times, one pair in each. */
 function pairedSlots(teams){
-  function pairs(side){
-    var s=P.filter(function(p){ return teams[p.id]===side; })
-           .sort(function(x,y){ return x.str-y.str||x.name.localeCompare(y.name); });
-    var out=[];
-    for(var i=0;i<SIDE_SIZE/2;i++) out.push([s[i],s[SIDE_SIZE-1-i]]);
+  function pairsFor(side){
+    var s2=P.filter(function(p){ return teams[p.id]===side; })
+            .sort(function(x,y){ return x.str-y.str||x.name.localeCompare(y.name); });
+    var out=[], n=s2.length;
+    for(var i=0;i<n/2;i++) out.push([s2[i],s2[n-1-i]]);
     out.sort(function(x,y){ return (x[0].str+x[1].str)-(y[0].str+y[1].str); });
     return out;
   }
-  var pa=pairs("n"), pb=pairs("g"), slots=[];
-  for(var m=0;m<4;m++) slots.push(pa[m][0].id,pa[m][1].id,pb[m][0].id,pb[m][1].id);
+  var pool={}, used={};
+  sides().forEach(function(t){ pool[t]=pairsFor(t); used[t]=0; });
+  var slots=[];
+  for(var i=0;i<NSLOT;i++) slots.push(null);
+  for(var m=0;m<4;m++){
+    var mu=matchup(m);
+    [0,1].forEach(function(k){
+      var t=mu[k];
+      var pr=pool[t][used[t]++];
+      if(!pr||!pr[0]||!pr[1]) return;
+      slots[m*4+k*2]=pr[0].id;
+      slots[m*4+k*2+1]=pr[1].id;
+    });
+  }
   return slots;
 }
 
@@ -1039,33 +1142,42 @@ function renderLedger(c){
   var t=byId("ledger");
   t.textContent="";
   var tb=el("tbody");
-  function row(label,sub,pn,pg,pending){
+  function row(label,sub,pn,pg,pending,ta,tb){
+    ta=ta||"n"; tb=tb||"g";
     var tr=el("tr");
-    tr.appendChild(el("td","pt "+(pn>pg?"n":"z"),fmt(pn)));
+    tr.appendChild(el("td","pt "+(pn>pg?ta:"z"),fmt(pn)));
     var mid=el("td","lbl");
     mid.appendChild(document.createTextNode(label));
     if(pending) mid.appendChild(el("span","pend","pending"));
     if(sub) mid.appendChild(el("span","sub",sub));
     tr.appendChild(mid);
-    tr.appendChild(el("td","pt "+(pg>pn?"g":"z"),fmt(pg)));
+    tr.appendChild(el("td","pt "+(pg>pn?tb:"z"),fmt(pg)));
     return tr;
   }
   c.ms.forEach(function(x){
     function names(ids){ return ids.length?ids.map(function(i){ return BY[i].name.split(" ")[0]; }).join(" / "):"open"; }
     var where=!x.s.ready?"needs players":(x.s.played?("thru "+x.s.played):"not started");
-    tb.appendChild(row("Match "+x.m.no+" · 4 pts",
-      names(x.m.n)+"  vs  "+names(x.m.g)+"  ·  "+where,
-      x.s.pts[0], x.s.pts[1], x.s.played<18));
+    var head="Match "+x.m.no+" · 4 pts";
+    if(state.mode===4) head+="  ·  "+TEAM[x.m.tA]+" v "+TEAM[x.m.tB];
+    tb.appendChild(row(head,
+      names(x.m.a)+"  vs  "+names(x.m.b)+"  ·  "+where,
+      x.s.pts[0], x.s.pts[1], x.s.played<18, x.m.tA, x.m.tB));
   });
   c.bonuses.forEach(function(b){
     tb.appendChild(row(b.label+" · "+b.worth+" pts",b.sub,
-      c.allDone?b.pts[0]:0,c.allDone?b.pts[1]:0,!c.allDone));
+      c.allDone?b.pts[0]:0,c.allDone?b.pts[1]:0,!c.allDone,"n","g"));
   });
   t.appendChild(tb);
   var tf=el("tfoot"), tr=el("tr");
-  tr.appendChild(el("td","pt "+(c.pts[0]>c.pts[1]?"n":"z"),fmt(c.pts[0])));
-  tr.appendChild(el("td",null,"Awarded · "+fmt(c.awarded)+" of 26"));
-  tr.appendChild(el("td","pt "+(c.pts[1]>c.pts[0]?"g":"z"),fmt(c.pts[1])));
+  if(state.mode===2){
+    tr.appendChild(el("td","pt "+(c.pts.n>c.pts.g?"n":"z"),fmt(c.pts.n)));
+    tr.appendChild(el("td",null,"Awarded · "+fmt(c.awarded)+" of "+c.total));
+    tr.appendChild(el("td","pt "+(c.pts.g>c.pts.n?"g":"z"),fmt(c.pts.g)));
+  }else{
+    var td=el("td",null,"Awarded · "+fmt(c.awarded)+" of "+c.total+" · match points only");
+    td.colSpan=3;
+    tr.appendChild(td);
+  }
   tf.appendChild(tr); t.appendChild(tf);
 }
 
@@ -1122,7 +1234,21 @@ function renderInd(c){
   t.appendChild(tb);
 }
 
-function renderBoard(c){ renderInd(c); renderLedger(c); }
+function renderStandings(c){
+  var card=byId("standCard");
+  card.hidden=state.mode!==4;
+  if(state.mode!==4) return;
+  var list=byId("standList");
+  list.textContent="";
+  c.standings.forEach(function(row,i){
+    var r=el("div","strow "+row.team);
+    r.appendChild(el("span","rk",String(i+1)));
+    r.appendChild(el("span","nm",TEAM[row.team]));
+    r.appendChild(el("span","pt",fmt(row.pts)));
+    list.appendChild(r);
+  });
+}
+function renderBoard(c){ renderStandings(c); renderInd(c); renderLedger(c); }
 
 /* ---------- the scorecard grid ---------- */
 function shapeFor(v,h){
@@ -1172,9 +1298,16 @@ function refreshSaveBar(){
 }
 function refreshHeader(){
   var c=compute();
-  byId("ptsN").textContent=fmt(c.pts[0]);
-  byId("ptsG").textContent=fmt(c.pts[1]);
+  if(state.mode===2){
+    byId("lbScoreRow").hidden=false;
+    byId("ptsN").textContent=fmt(c.pts.n);
+    byId("ptsG").textContent=fmt(c.pts.g);
+  }else{
+    /* four-way: the standings card carries the numbers, not the header */
+    byId("lbScoreRow").hidden=true;
+  }
   byId("ptsAwarded").textContent=fmt(c.awarded);
+  byId("ptsTotal").textContent=String(c.total);
   var note=byId("leadNote");
   note.textContent="";
   if(!evenSides(state.teams)){
@@ -1185,8 +1318,15 @@ function refreshHeader(){
   }else if(!c.anyScore){
     note.textContent="Draw is set. Post a score to start the board.";
   }else{
-    var d=c.pts[0]-c.pts[1], rem=26-c.awarded;
-    note.appendChild(el("strong",null,d===0?"All square":(teamName(d>0?"n":"g")+" by "+fmt(Math.abs(d)))));
+    var rem=c.total-c.awarded;
+    if(state.mode===2){
+      var d=c.pts.n-c.pts.g;
+      note.appendChild(el("strong",null,d===0?"All square":(teamName(d>0?"n":"g")+" by "+fmt(Math.abs(d)))));
+    }else{
+      var top=c.standings[0], second=c.standings[1];
+      var lead=top.pts-second.pts;
+      note.appendChild(el("strong",null,lead===0?"Tied at the top":(TEAM[top.team]+" by "+fmt(lead))));
+    }
     note.appendChild(document.createTextNode(c.allDone?" · final":" · "+fmt(rem)+" point"+(rem===1?"":"s")+" still on the board"));
   }
   setStatus(c.allDone?"Final":"");
@@ -1242,11 +1382,11 @@ function renderTeeGrid(){
   var tb=el("tbody");
   var groups=matchesOf(state.slots).map(function(m){
     return {label:"Match "+m.no+"  ·  "+teeTime(m.no-1),
-      info:(m.n.length?m.n.map(function(i){return shortName(BY[i].name);}).join(" / "):"open")
+      info:(m.a.length?m.a.map(function(i){return shortName(BY[i].name);}).join(" / "):"open")
            +"  vs  "+
-           (m.g.length?m.g.map(function(i){return shortName(BY[i].name);}).join(" / "):"open"),
-      rows:[].concat(m.n.map(function(i){return {id:i,team:"n"};}),
-                     m.g.map(function(i){return {id:i,team:"g"};}))};
+           (m.b.length?m.b.map(function(i){return shortName(BY[i].name);}).join(" / "):"open"),
+      rows:[].concat(m.a.map(function(i){return {id:i,team:m.tA};}),
+                     m.b.map(function(i){return {id:i,team:m.tB};}))};
   });
   var placed={}; state.slots.forEach(function(id){ if(id) placed[id]=1; });
   var spare=P.filter(function(p){ return !placed[p.id]; });
@@ -1319,12 +1459,13 @@ function teamDraftDirty(){
 /* Pointer-events drag: one code path for mouse and touch, since HTML5 dragstart
    never fires on a phone and this gets used on a phone. */
 var drag=null;
-var ZONES=[{key:"pool",box:"zonePool"},{key:"n",box:"zoneN"},{key:"g",box:"zoneG"}];
 function zoneEls(){
-  return ZONES.map(function(z){
-    var box=byId(z.box);
-    return {key:z.key, el:box?box.parentNode:null};   /* .chips sits directly in .zone */
+  var out=[{key:"pool", el:byId("zonePool")?byId("zonePool").parentNode:null}];
+  sides().forEach(function(t){
+    var box=byId("zone_"+t);
+    if(box) out.push({key:t, el:box.parentNode});
   });
+  return out;
 }
 function focusChip(pid){
   var c=document.querySelector('.chip[data-pid="'+pid+'"]');
@@ -1357,8 +1498,9 @@ function endDrag(commitZone){
   }
 }
 function cycleSide(pid){
-  var t=teamDraft[pid];
-  teamDraft[pid]=t===null?"n":(t==="n"?"g":null);
+  var order=sides(), t=teamDraft[pid];
+  var i=order.indexOf(t);
+  teamDraft[pid]=(i<0)?order[0]:(i+1<order.length?order[i+1]:null);
   renderTeams();
 }
 function startDrag(e,pid,chip){
@@ -1396,27 +1538,52 @@ function upDrag(e){
 
 function renderTeams(){
   var editable=!state.locked&&!readOnly&&!saving;
+  var order=sides(), want=sideSize();
+
+  byId("mode2").setAttribute("aria-pressed",state.mode===2?"true":"false");
+  byId("mode4").setAttribute("aria-pressed",state.mode===4?"true":"false");
+  byId("mode2").disabled=!editable;
+  byId("mode4").disabled=!editable;
+  byId("sidesTitle").textContent=state.mode===4?"The four teams":"The two sides";
+
   function sums(t,key){
-    return P.reduce(function(s,p){ return teamDraft[p.id]===t?s+p[key]:s; },0);
+    return P.reduce(function(acc,p){ return teamDraft[p.id]===t?acc+p[key]:acc; },0);
   }
-  var gn=sums("n","hcp"), gg=sums("g","hcp");
-  var cn=sideCount(teamDraft,"n"), cg=sideCount(teamDraft,"g");
   var pool=P.filter(function(p){ return !teamDraft[p.id]; });
-  byId("balN").textContent=String(gn);
-  byId("balG").textContent=String(gg);
-  byId("balNs").textContent=cn+" players";
-  byId("balGs").textContent=cg+" players";
-  byId("balGap").textContent=String(Math.abs(gn-gg));
+
+  /* balance readout: two sides get the head-to-head figure, four get a spread */
+  var totals=order.map(function(t){ return sums(t,"hcp"); });
+  var spread=Math.max.apply(null,totals)-Math.min.apply(null,totals);
+  byId("balN").textContent=String(totals[0]);
+  byId("balG").textContent=String(totals[order.length-1]);
+  byId("balNs").textContent=sideCount(teamDraft,order[0])+" players";
+  byId("balGs").textContent=sideCount(teamDraft,order[order.length-1])+" players";
+  byId("balGap").textContent=String(spread);
+  byId("balLabN").textContent=TEAM[order[0]];
+  byId("balLabG").textContent=TEAM[order[order.length-1]];
+
   var tt=byId("teamTag");
-  tt.textContent=cn+" v "+cg;
+  tt.textContent=order.map(function(t){ return sideCount(teamDraft,t); }).join(" v ");
   tt.className="tag"+(evenSides(teamDraft)?"":" bad");
+
+  /* the drop zones are rebuilt so two-team and four-team share one path */
+  var row=byId("zoneRow");
+  row.textContent="";
+  order.forEach(function(t){
+    var z=el("div","zone "+t);
+    z.setAttribute("data-zone",t);
+    var head=el("div","zhead");
+    head.appendChild(el("span",null,TEAM[t]));
+    var cnt=sideCount(teamDraft,t);
+    var zc=el("span","zc"+(cnt===want?"":" bad"),cnt+" / "+want);
+    head.appendChild(zc);
+    z.appendChild(head);
+    var chips=el("div","chips");
+    chips.id="zone_"+t;
+    z.appendChild(chips);
+    row.appendChild(z);
+  });
   byId("zcPool").textContent=String(pool.length);
-  function count(id,c){
-    var e2=byId(id);
-    e2.textContent=c+" / "+SIDE_SIZE;
-    e2.className="zc"+(c===SIDE_SIZE?"":" bad");
-  }
-  count("zcN",cn); count("zcG",cg);
 
   function chipFor(p){
     var side=teamDraft[p.id];
@@ -1436,9 +1603,9 @@ function renderTeams(){
         startDrag(e,p.id,b);
       });
       b.addEventListener("keydown",function(e){
-        var k=e.key;
-        if(k==="ArrowLeft"){ e.preventDefault(); teamDraft[p.id]="n"; renderTeams(); focusChip(p.id); }
-        else if(k==="ArrowRight"){ e.preventDefault(); teamDraft[p.id]="g"; renderTeams(); focusChip(p.id); }
+        var k=e.key, ord=sides(), at=ord.indexOf(teamDraft[p.id]);
+        if(k==="ArrowRight"){ e.preventDefault(); teamDraft[p.id]=ord[Math.min(ord.length-1,at+1)]||ord[0]; renderTeams(); focusChip(p.id); }
+        else if(k==="ArrowLeft"){ e.preventDefault(); teamDraft[p.id]=at<=0?ord[0]:ord[at-1]; renderTeams(); focusChip(p.id); }
         else if(k==="ArrowUp"||k==="Backspace"||k==="Delete"){ e.preventDefault(); teamDraft[p.id]=null; renderTeams(); focusChip(p.id); }
         else if(k===" "||k==="Enter"){ e.preventDefault(); cycleSide(p.id); focusChip(p.id); }
       });
@@ -1447,18 +1614,18 @@ function renderTeams(){
   }
   function fill(boxId,players,emptyText){
     var box=byId(boxId);
+    if(!box) return;
     box.textContent="";
     if(!players.length){ box.appendChild(el("span","zempty",emptyText)); return; }
     players.forEach(function(p){ box.appendChild(chipFor(p)); });
   }
   var byIndex=function(a,b){ return a.hcp-b.hcp||a.name.localeCompare(b.name); };
-  fill("zonePool",pool.sort(byIndex),"everyone is on a side");
-  fill("zoneN",P.filter(function(p){ return teamDraft[p.id]==="n"; }).sort(byIndex),"drop names here");
-  fill("zoneG",P.filter(function(p){ return teamDraft[p.id]==="g"; }).sort(byIndex),"drop names here");
+  fill("zonePool",pool.sort(byIndex),"everyone is on a team");
+  order.forEach(function(t){
+    fill("zone_"+t,P.filter(function(p){ return teamDraft[p.id]===t; }).sort(byIndex),"drop names here");
+  });
 
   var dirty=teamDraftDirty();
-  /* an uneven split can't seat four 2v2 tee times, so it never gets published —
-     finish both halves of a swap in the draft first */
   byId("saveTeamsBtn").disabled=!editable||!dirty||!evenSides(teamDraft);
   byId("revertTeamsBtn").disabled=!editable||!dirty;
   byId("balanceBtn").disabled=!editable;
@@ -1474,9 +1641,9 @@ function renderTeams(){
   var tm=byId("teamMsg");
   if(readOnly) tm.textContent="View only on this device.";
   else if(state.locked) tm.textContent="Locked.";
-  else if(!evenSides(teamDraft)) tm.textContent="Needs "+SIDE_SIZE+" a side.";
+  else if(!evenSides(teamDraft)) tm.textContent="Needs "+want+" a team.";
   else if(dirty) tm.textContent="Unsaved on this device.";
-  else tm.textContent="Everyone is seeing these sides.";
+  else tm.textContent="Everyone is seeing these teams.";
 }
 
 /* ---------- tee time editor ---------- */
@@ -1543,8 +1710,8 @@ function renderTeeSetup(){
       d.appendChild(el("b",null,ids.length<2?"—":("+"+ids.reduce(function(a,i){return a+BY[i].str;},0))));
       return d;
     }
-    foot.appendChild(cell(TEAM.n,m.n));
-    foot.appendChild(cell(TEAM.g,m.g));
+    foot.appendChild(cell(TEAM[m.tA],m.a));
+    foot.appendChild(cell(TEAM[m.tB],m.b));
     box.appendChild(foot);
     wrap.appendChild(box);
   });
@@ -1578,9 +1745,9 @@ function renderDraw(){
       var s=el("span",cls, ids.length?ids.map(function(i){ return shortName(BY[i].name); }).join(" / "):"open");
       return s;
     }
-    nm.appendChild(side(m.n,"t1"));
+    nm.appendChild(side(m.a,"t"+(sides().indexOf(m.tA)+1)));
     nm.appendChild(el("span","vs","v"));
-    nm.appendChild(side(m.g,"t2"));
+    nm.appendChild(side(m.b,"t"+(sides().indexOf(m.tB)+1)));
     row.appendChild(nm);
     wrap.appendChild(row);
   });
@@ -1604,7 +1771,7 @@ var curHole=0;
 function groupIds(){
   if(sheetSolo) return {m:null, ids:[sheetSolo]};
   var m=matchesOf(state.slots)[group-1];
-  return {m:m, ids:m.n.concat(m.g)};
+  return {m:m, ids:m.a.concat(m.b)};
 }
 function holeDirty(h){
   return P.some(function(p){ return isEdited(p.id,h); });
@@ -2000,6 +2167,7 @@ function commit(patch,msgId){
     for(var i=0;i<NSLOT;i++) up["slots/"+i]=patch.slots[i]||null;
   }
   if(typeof patch.locked==="boolean") up["locked"]=patch.locked;
+  if(patch.mode) up["mode"]=patch.mode;
   if(patch.roster){
     P.forEach(function(p){
       var o=patch.roster[p.id];
@@ -2072,6 +2240,23 @@ byId("discardBtn").addEventListener("click",function(){
 });
 
 /* teams tab actions */
+function setMode(m){
+  if(saving||readOnly||state.locked||state.mode===m) return;
+  state.mode=m;
+  teamDraft=balancedTeams(false);
+  P.forEach(function(p){ state.teams[p.id]=teamDraft[p.id]; });
+  /* every seat is tied to a side, and the sides just changed */
+  state.slots=[];
+  for(var i=0;i<NSLOT;i++) state.slots.push(null);
+  slotDraft=state.slots.slice();
+  render();
+  commit({mode:m,teams:JSON.parse(JSON.stringify(state.teams)),slots:state.slots.slice()},"balMsg");
+  msg("balMsg",m===4?("Four teams of "+sideSize()+", auto-balanced. Tee times cleared — use Auto-pair on the Tee Times tab.")
+                    :("Two sides of "+sideSize()+", auto-balanced. Tee times cleared — use Auto-pair on the Tee Times tab."),"");
+}
+byId("mode2").addEventListener("click",function(){ setMode(2); });
+byId("mode4").addEventListener("click",function(){ setMode(4); });
+
 byId("balanceBtn").addEventListener("click",function(){
   teamDraft=balancedTeams(false); renderTeams();
   msg("balMsg","Auto-balanced. Save to push the sides to everyone.","");
@@ -2239,7 +2424,7 @@ window.__shootout={
     setConn(up?(everSynced?"Live":"Live"):"Offline");
     if(!up) setConn("Offline");
   },
-  seed:function(){ return {teams:DEFAULT_STATE.teams,slots:DEFAULT_STATE.slots,
+  seed:function(){ return {mode:2,teams:DEFAULT_STATE.teams,slots:DEFAULT_STATE.slots,
                            locked:false}; },
   fail:function(m){
     setConn("Offline");

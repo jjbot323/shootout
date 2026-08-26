@@ -66,64 +66,25 @@ button{font:inherit; color:inherit; cursor:pointer}
 h1,h2,h3{text-wrap:balance; margin:0}
 p{margin:0}
 
-/* The banner and the tab bar travel together as one sticky block; the
-   leaderboard drawer hangs underneath and scrolls inside itself. */
-.stick{position:sticky; top:0; z-index:40; background:var(--card); box-shadow:0 4px 14px var(--shadow)}
-.hero{background:var(--card); border-bottom:1px solid var(--line-2)}
-.hero-bar{
-  display:grid; grid-template-columns:auto 1fr auto auto; align-items:center; gap:10px;
-  width:100%; max-width:1100px; margin:0 auto; padding:9px 14px;
-  background:none; border:0; text-align:left; font-family:inherit; color:inherit;
-}
-.hb-side{display:flex; flex-direction:column; align-items:center; gap:1px; min-width:52px}
-.hb-side i{font-style:normal; font-size:9px; letter-spacing:.12em; text-transform:uppercase; font-weight:700}
-.hb-side.n i{color:var(--t1)}
-.hb-side.g i{color:var(--t2)}
-.hb-side b{font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:26px; font-weight:700; line-height:1}
-.hb-side.n b{color:var(--t1)}
-.hb-side.g b{color:var(--t2)}
-.hb-mid{display:flex; flex-direction:column; align-items:center; gap:2px; min-width:0; text-align:center}
-.hb-lead{font-size:12.5px; color:var(--ink); font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%}
-.hb-of{font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3)}
-.hb-of b{font-family:var(--mono); color:var(--ink-2)}
-.hb-chev{
-  width:26px; height:26px; flex:0 0 auto; position:relative;
-  border:1px solid var(--line); border-radius:50%;
-}
-.hb-chev::before{
-  content:""; position:absolute; left:50%; top:47%; width:7px; height:7px;
-  border-right:2px solid var(--ink-2); border-bottom:2px solid var(--ink-2);
-  transform:translate(-50%,-60%) rotate(45deg); transition:transform .18s ease;
-}
-[aria-expanded="true"] .hb-chev::before{transform:translate(-50%,-10%) rotate(225deg)}
-
-/* the standings ticker */
-.ticker{overflow:hidden; border-top:1px solid var(--line-2); background:var(--card-2); padding:5px 0}
-.ticker-run{display:flex; gap:26px; white-space:nowrap; width:max-content; padding-left:14px}
-.tk{font-size:11.5px; color:var(--ink-2); font-family:var(--mono)}
-.tk b{font-weight:700; color:var(--ink); margin:0 5px}
-.tk .s{font-weight:700}
-.tk .s.under{color:var(--red)}
-.tk .s.level{color:var(--ink-3)}
-@media (prefers-reduced-motion:no-preference){
-  .ticker-run{animation:tick 42s linear infinite}
-  .ticker:hover .ticker-run,.ticker:focus-within .ticker-run{animation-play-state:paused}
-  @keyframes tick{from{transform:translateX(0)} to{transform:translateX(-50%)}}
-}
-@media (prefers-reduced-motion:reduce){
-  .ticker{overflow-x:auto}
-}
-.hero-panel{
-  max-height:min(58vh,540px); overflow-y:auto; -webkit-overflow-scrolling:touch;
-  background:var(--paper); border-top:2px solid var(--rule);
-  padding:12px 14px calc(12px + env(safe-area-inset-bottom,0px));
-  display:grid; gap:12px;
-}
-@media (min-width:1140px){.hero-panel{padding-left:calc((100vw - 1100px)/2); padding-right:calc((100vw - 1100px)/2)}}
+/* The tab bar is the only sticky chrome now; the leaderboard lives in a popup. */
+.stick{position:sticky; top:0; z-index:40; background:var(--card); box-shadow:0 3px 12px var(--shadow)}
 .tabs{
-  background:var(--card); border-bottom:1px solid var(--line);
-  overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;
+  display:flex; align-items:stretch; gap:8px; max-width:1100px; margin:0 auto;
+  background:var(--card); border-bottom:1px solid var(--line); padding-right:12px;
 }
+.tabs-in{flex:1 1 auto; min-width:0; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none}
+.tabs-in::-webkit-scrollbar{display:none}
+.tabs-right{flex:0 0 auto; display:flex; align-items:center; gap:9px}
+.conn{
+  font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; font-weight:700;
+  color:var(--ink-3); white-space:nowrap;
+}
+.lbbtn{
+  border:1px solid var(--brand); background:var(--brand); color:var(--btn-ink);
+  border-radius:6px; padding:8px 13px; font-family:inherit; font-size:12px; font-weight:700;
+  letter-spacing:.06em; text-transform:uppercase; white-space:nowrap; min-height:36px;
+}
+@media (max-width:400px){.lbbtn{padding:8px 10px; font-size:11px}}
 .tabs::-webkit-scrollbar{display:none}
 .tabs-in{display:flex; max-width:1100px; margin:0 auto; padding:0 6px}
 .tab{background:none; border:0; padding:15px 15px 13px; white-space:nowrap; font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); border-bottom:2px solid transparent}
@@ -290,6 +251,24 @@ table{border-collapse:collapse; width:100%}
 .sheet-t{line-height:1.2}
 .sheet-t b{display:block; font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-2)}
 .sheet-t span{font-size:11.5px; color:var(--ink-3); font-family:var(--mono)}
+.lb-p{max-width:660px}
+.lb-head{display:grid; gap:3px; min-width:0}
+.lb-head>b{font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--brand)}
+.lb-score{display:flex; align-items:baseline; gap:6px; font-family:var(--mono); font-variant-numeric:tabular-nums}
+.lb-score b{font-size:24px; font-weight:700; line-height:1}
+.lb-score b.n{color:var(--t1)}
+.lb-score b.g{color:var(--t2)}
+.lb-score i{font-style:normal; font-family:var(--sans); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; font-weight:700}
+.lb-score i.n{color:var(--t1)}
+.lb-score i.g{color:var(--t2)}
+.lb-score em{font-style:normal; color:var(--ink-3); font-size:18px}
+.lb-sub{font-size:11.5px; color:var(--ink-3)}
+.lb-sub b{font-family:var(--mono); color:var(--ink-2)}
+.lb-body{
+  padding:12px 14px calc(14px + env(safe-area-inset-bottom,0px));
+  background:var(--paper); border-top:2px solid var(--rule);
+  display:grid; gap:12px;
+}
 .sheet-x{
   width:40px; height:40px; flex:0 0 auto; border:1px solid var(--line); border-radius:8px;
   background:var(--card); font-size:22px; line-height:1; color:var(--ink-2); display:grid; place-items:center;
@@ -508,36 +487,16 @@ footer{max-width:1100px; margin:0 auto; padding:4px 16px 40px; font-size:11.5px;
 <body>
 
 <div class="stick">
-  <header class="hero">
-    <button type="button" class="hero-bar" id="heroToggle" aria-expanded="false" aria-controls="heroPanel">
-      <span class="hb-side n"><i>Team 1</i><b id="ptsN">0</b></span>
-      <span class="hb-mid">
-        <span class="hb-lead" id="leadNote">Connecting…</span>
-        <span class="hb-of"><b id="ptsAwarded">0</b> of 26 awarded &middot; <span id="statusNote">Live</span></span>
-      </span>
-      <span class="hb-side g"><i>Team 2</i><b id="ptsG">0</b></span>
-      <span class="hb-chev" aria-hidden="true"></span>
-    </button>
-    <div class="ticker" id="tickerWrap"><div class="ticker-run" id="tickerRun"></div></div>
-  </header>
-
   <nav class="tabs">
     <div class="tabs-in" role="tablist" aria-label="Sections">
       <button class="tab" role="tab" id="tab-tee" aria-controls="p-tee" aria-selected="true">Tee Times and Scoring<span class="flag" id="teeFlag" hidden></span></button>
       <button class="tab" role="tab" id="tab-teams" aria-controls="p-teams" aria-selected="false">Teams<span class="flag" id="teamFlag" hidden></span></button>
     </div>
+    <div class="tabs-right">
+      <span class="conn" id="statusNote">Live</span>
+      <button type="button" class="lbbtn" id="lbOpen">Leaderboard</button>
+    </div>
   </nav>
-
-  <div class="hero-panel" id="heroPanel" hidden>
-    <div class="card">
-      <div class="card-h"><h2>Individual board</h2></div>
-      <div class="card-b flush"><div class="scroller"><table class="ind" id="indBoard"></table></div></div>
-    </div>
-    <div class="card">
-      <div class="card-h"><h2>Point ledger</h2></div>
-      <div class="card-b flush"><table class="ledger" id="ledger"></table></div>
-    </div>
-  </div>
 </div>
 
 <main>
@@ -687,6 +646,35 @@ footer{max-width:1100px; margin:0 auto; padding:4px 16px 40px; font-size:11.5px;
     <div class="msg" id="holeMsg"></div>
   </div>
 </div>
+<div class="sheet" id="lbSheet" hidden>
+  <div class="sheet-bd" id="lbBackdrop"></div>
+  <div class="sheet-p lb-p" id="lbPanel" role="dialog" aria-modal="true" aria-labelledby="lbTitle">
+    <div class="sheet-grab"></div>
+    <div class="sheet-h">
+      <div class="lb-head">
+        <b id="lbTitle">Leaderboard</b>
+        <span class="lb-score">
+          <i class="n">Team 1</i><b class="n" id="ptsN">0</b>
+          <em>&ndash;</em>
+          <b class="g" id="ptsG">0</b><i class="g">Team 2</i>
+        </span>
+        <span class="lb-sub"><b id="ptsAwarded">0</b> of 26 awarded &middot; <span id="leadNote">Connecting…</span></span>
+      </div>
+      <button type="button" class="sheet-x" id="lbClose" aria-label="Close the leaderboard">&times;</button>
+    </div>
+    <div class="lb-body">
+      <div class="card">
+        <div class="card-h"><h2>Individual board</h2></div>
+        <div class="card-b flush"><div class="scroller"><table class="ind" id="indBoard"></table></div></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h2>Point ledger</h2></div>
+        <div class="card-b flush"><table class="ledger" id="ledger"></table></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 (function(){
 "use strict";
@@ -1208,58 +1196,27 @@ function refreshHeader(){
     note.appendChild(document.createTextNode(c.allDone?" · final":" · "+fmt(rem)+" point"+(rem===1?"":"s")+" still on the board"));
   }
   byId("statusNote").textContent=c.allDone?"Final":"Live";
-  renderTicker(c);
   byId("setupBanner").hidden=assignedCount(state.slots)===NSLOT;
   return c;
 }
 
-/* ---------- the leaderboard drawer ---------- */
-var HKEY="ssg-hero-v1";
-var heroOpen=(function(){
-  try{ return localStorage.getItem(HKEY)==="1"; }catch(e){ return false; }
-})();
-function applyHero(){
-  byId("heroPanel").hidden=!heroOpen;
-  byId("heroToggle").setAttribute("aria-expanded",heroOpen?"true":"false");
-  if(heroOpen) renderBoard(compute());
+/* ---------- the leaderboard popup ---------- */
+var lbOpenState=false, lbReturn=null;
+function openLb(){
+  lbReturn=document.activeElement;
+  lbOpenState=true;
+  byId("lbSheet").hidden=false;
+  document.body.style.overflow="hidden";
+  renderBoard(compute());
+  byId("lbPanel").focus();
 }
-function setHero(open){
-  heroOpen=open;
-  try{ localStorage.setItem(HKEY,open?"1":"0"); }catch(e){}
-  applyHero();
-}
-
-/* A single pass of the standings, duplicated so the marquee can loop seamlessly. */
-function renderTicker(c){
-  var run=byId("tickerRun");
-  var rows=P.map(function(p){ return {p:p,t:c.tallies[p.id]}; })
-    .filter(function(r){ return r.t.played>0; })
-    .sort(function(a,b){ return a.t.toPar-b.t.toPar||b.t.played-a.t.played; });
-  run.textContent="";
-  if(!rows.length){
-    run.appendChild(el("span","tk","No scores posted yet \u2014 tap a hole on the scorecard to start."));
-    return;
-  }
-  var pos=[], i=0;
-  while(i<rows.length){
-    var j=i;
-    while(j+1<rows.length&&rows[j+1].t.toPar===rows[i].t.toPar) j++;
-    var lab=(j>i?"T":"")+(i+1);
-    for(var k=i;k<=j;k++) pos[k]=lab;
-    i=j+1;
-  }
-  function pass(){
-    rows.forEach(function(r,ix){
-      var sp=el("span","tk");
-      sp.appendChild(document.createTextNode(pos[ix]));
-      sp.appendChild(el("b",null,shortName(r.p.name)));
-      var v=r.t.toPar;
-      sp.appendChild(el("span","s "+(v<0?"under":(v===0?"level":"over")),toPar(v)));
-      sp.appendChild(document.createTextNode(" \u00b7 thru "+r.t.last));
-      run.appendChild(sp);
-    });
-  }
-  pass(); pass();
+function closeLb(){
+  if(!lbOpenState) return;
+  lbOpenState=false;
+  byId("lbSheet").hidden=true;
+  if(!sheetOpen) document.body.style.overflow="";
+  if(lbReturn&&lbReturn.focus) lbReturn.focus();
+  lbReturn=null;
 }
 
 function renderTeeGrid(){
@@ -1992,7 +1949,7 @@ function render(){
   renderTeeGrid();
   refreshSaveBar();
   renderDraw();
-  applyHero();
+  if(lbOpenState) renderBoard(compute());
   if(sheetOpen) renderHole(true);
   renderRoster();
   renderTeams();
@@ -2088,7 +2045,13 @@ function resyncDrafts(){
 }
 
 /* ---------- wiring ---------- */
-byId("heroToggle").addEventListener("click",function(){ setHero(!heroOpen); });
+byId("lbPanel").tabIndex=-1;
+byId("lbOpen").addEventListener("click",openLb);
+byId("lbClose").addEventListener("click",closeLb);
+byId("lbBackdrop").addEventListener("click",closeLb);
+document.addEventListener("keydown",function(e){
+  if(lbOpenState&&e.key==="Escape"){ e.preventDefault(); closeLb(); }
+});
 var TABS=["tee","teams"];
 function showTab(k){
   TABS.forEach(function(j){

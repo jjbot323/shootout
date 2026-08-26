@@ -41,10 +41,8 @@ cut('<script id="state" type="application/json">%%STATE%%</script>\n', '\n<div c
 cut('<script id="src" type="text/plain">%%SRC%%</script>\n', '<script>\n(function(){', "src block")
 
 # ---------------------------------------------------------------- live badge
-sub('<span id="statusNote">Live</span>',
-    '<span id="statusNote">Live</span>', "status note")
-sub('<span class="hb-lead" id="leadNote">No scores in yet.</span>',
-    '<span class="hb-lead" id="leadNote">Connecting…</span>', "lead note")
+sub('<span id="leadNote">No scores in yet.</span>',
+    '<span id="leadNote">Connecting…</span>', "lead note")
 
 # ---------------------------------------------------------------- state init
 old_state_start = s.index('var state=(function(){')

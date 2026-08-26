@@ -1,4 +1,4 @@
-# Sixteen Man Shootout
+# 8/29 Golf
 
 Live net better-ball scoring for a 16-player one-round match. Static site,
 Firebase Realtime Database for shared state — every phone sees every score

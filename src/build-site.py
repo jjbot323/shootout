@@ -37,8 +37,8 @@ _panel = _re.search(r'<div class="panel" ' + _re.escape(_pid) + r'[^>]*>', s)
 assert _panel and 'hidden' not in _panel.group(0),     "the selected tab's panel (%s) must not be hidden" % _pid
 
 # ---------------------------------------------------------------- head/meta
-sub('<title>Sixteen Man Shootout</title>',
-    '<title>Sixteen Man Shootout</title>\n'
+sub('<title>8/29 Golf</title>',
+    '<title>8/29 Golf</title>\n'
     '<meta name="description" content="Live net better-ball scoring for a 16-player one-round match.">\n'
     '<meta name="theme-color" content="#FFFFFF">\n'
     '<link rel="icon" href="data:image/svg+xml,'

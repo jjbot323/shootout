@@ -37,14 +37,14 @@ sub('<title>Sixteen Man Shootout</title>',
     "head meta")
 
 # the page no longer carries its own state, and no longer copies its own source
-cut('<script id="state" type="application/json">%%STATE%%</script>\n', '\n<header class="board">', "state block")
+cut('<script id="state" type="application/json">%%STATE%%</script>\n', '\n<div class="stick">', "state block")
 cut('<script id="src" type="text/plain">%%SRC%%</script>\n', '<script>\n(function(){', "src block")
 
 # ---------------------------------------------------------------- live badge
 sub('<span id="statusNote">Live</span>',
     '<span id="statusNote">Live</span>', "status note")
-sub('<div class="lead-note" id="leadNote">No scores in yet.</div>',
-    '<div class="lead-note" id="leadNote">Connecting…</div>', "lead note")
+sub('<span class="hb-lead" id="leadNote">No scores in yet.</span>',
+    '<span class="hb-lead" id="leadNote">Connecting…</span>', "lead note")
 
 # ---------------------------------------------------------------- state init
 old_state_start = s.index('var state=(function(){')

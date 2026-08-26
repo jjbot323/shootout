@@ -163,7 +163,7 @@ STUB = ('<script>window.claude={use:function(n){return Promise.resolve('
 
 def emit(name, blob):
     out = tpl.replace(M_STATE, blob, 1).replace(M_SRC, stored, 1)
-    out = out.replace('<header class="board">', STUB + "\n" + '<header class="board">', 1)
+    out = out.replace('<div class="stick">', STUB + "\n" + '<div class="stick">', 1)
     io.open(os.path.join(HERE, name), "w", encoding="utf-8", newline="").write(out)
 
 EMPTY = {p: [None]*18 for p in IDS}

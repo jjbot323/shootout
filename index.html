@@ -66,28 +66,62 @@ button{font:inherit; color:inherit; cursor:pointer}
 h1,h2,h3{text-wrap:balance; margin:0}
 p{margin:0}
 
-.board{
-  background:linear-gradient(135deg,var(--board),var(--board-2));
-  color:var(--board-ink); border-bottom:3px solid var(--rule);
-  box-shadow:0 4px 12px var(--shadow);
+/* The banner and the tab bar travel together as one sticky block; the
+   leaderboard drawer hangs underneath and scrolls inside itself. */
+.stick{position:sticky; top:0; z-index:40; background:var(--card); box-shadow:0 4px 14px var(--shadow)}
+.hero{background:var(--card); border-bottom:1px solid var(--line-2)}
+.hero-bar{
+  display:grid; grid-template-columns:auto 1fr auto auto; align-items:center; gap:10px;
+  width:100%; max-width:1100px; margin:0 auto; padding:9px 14px;
+  background:none; border:0; text-align:left; font-family:inherit; color:inherit;
 }
-.board-in{max-width:1100px; margin:0 auto; padding:12px 16px 0}
-.board-top{display:flex; align-items:baseline; justify-content:flex-end; gap:12px; font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--board-dim); min-height:14px}
-.board-score{display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:10px; padding:6px 0 12px}
-.side{display:flex; flex-direction:column; gap:2px}
-.side.r{align-items:flex-end; text-align:right}
-.side-name{font-size:11px; letter-spacing:.14em; text-transform:uppercase; font-weight:700}
-.side.n .side-name{color:var(--board-t1)}
-.side.g .side-name{color:var(--board-t2)}
-.side-pts{font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:clamp(36px,12vw,54px); line-height:.9; font-weight:600; letter-spacing:-.03em}
-.board-mid{font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--board-dim); text-align:center; line-height:1.35}
-.board-mid b{display:block; font-family:var(--mono); font-size:15px; color:var(--board-ink); font-weight:600}
-.lead-note{border-top:1px solid var(--board-line); padding:8px 0 10px; font-size:12.5px; color:var(--board-dim); text-align:center}
-.lead-note strong{color:var(--board-ink); font-weight:600}
+.hb-side{display:flex; flex-direction:column; align-items:center; gap:1px; min-width:52px}
+.hb-side i{font-style:normal; font-size:9px; letter-spacing:.12em; text-transform:uppercase; font-weight:700}
+.hb-side.n i{color:var(--t1)}
+.hb-side.g i{color:var(--t2)}
+.hb-side b{font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:26px; font-weight:700; line-height:1}
+.hb-side.n b{color:var(--t1)}
+.hb-side.g b{color:var(--t2)}
+.hb-mid{display:flex; flex-direction:column; align-items:center; gap:2px; min-width:0; text-align:center}
+.hb-lead{font-size:12.5px; color:var(--ink); font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%}
+.hb-of{font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3)}
+.hb-of b{font-family:var(--mono); color:var(--ink-2)}
+.hb-chev{
+  width:26px; height:26px; flex:0 0 auto; position:relative;
+  border:1px solid var(--line); border-radius:50%;
+}
+.hb-chev::before{
+  content:""; position:absolute; left:50%; top:47%; width:7px; height:7px;
+  border-right:2px solid var(--ink-2); border-bottom:2px solid var(--ink-2);
+  transform:translate(-50%,-60%) rotate(45deg); transition:transform .18s ease;
+}
+[aria-expanded="true"] .hb-chev::before{transform:translate(-50%,-10%) rotate(225deg)}
 
+/* the standings ticker */
+.ticker{overflow:hidden; border-top:1px solid var(--line-2); background:var(--card-2); padding:5px 0}
+.ticker-run{display:flex; gap:26px; white-space:nowrap; width:max-content; padding-left:14px}
+.tk{font-size:11.5px; color:var(--ink-2); font-family:var(--mono)}
+.tk b{font-weight:700; color:var(--ink); margin:0 5px}
+.tk .s{font-weight:700}
+.tk .s.under{color:var(--red)}
+.tk .s.level{color:var(--ink-3)}
+@media (prefers-reduced-motion:no-preference){
+  .ticker-run{animation:tick 42s linear infinite}
+  .ticker:hover .ticker-run,.ticker:focus-within .ticker-run{animation-play-state:paused}
+  @keyframes tick{from{transform:translateX(0)} to{transform:translateX(-50%)}}
+}
+@media (prefers-reduced-motion:reduce){
+  .ticker{overflow-x:auto}
+}
+.hero-panel{
+  max-height:min(58vh,540px); overflow-y:auto; -webkit-overflow-scrolling:touch;
+  background:var(--paper); border-top:2px solid var(--rule);
+  padding:12px 14px calc(12px + env(safe-area-inset-bottom,0px));
+  display:grid; gap:12px;
+}
+@media (min-width:1140px){.hero-panel{padding-left:calc((100vw - 1100px)/2); padding-right:calc((100vw - 1100px)/2)}}
 .tabs{
-  position:sticky; top:0; z-index:40; background:var(--card);
-  border-bottom:1px solid var(--line); box-shadow:0 1px 0 var(--line),0 4px 12px -8px var(--scrim);
+  background:var(--card); border-bottom:1px solid var(--line);
   overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;
 }
 .tabs::-webkit-scrollbar{display:none}
@@ -473,30 +507,28 @@ footer{max-width:1100px; margin:0 auto; padding:4px 16px 40px; font-size:11.5px;
 </head>
 <body>
 
-<header class="board">
-  <div class="board-in">
-    <div class="board-top">
-      <span id="statusNote">Live</span>
-    </div>
-    <div class="board-score">
-      <div class="side n"><span class="side-name">Team 1</span><span class="side-pts" id="ptsN">0</span></div>
-      <div class="board-mid"><span>of 26</span><b id="ptsAwarded">0</b><span>awarded</span></div>
-      <div class="side g r"><span class="side-name">Team 2</span><span class="side-pts" id="ptsG">0</span></div>
-    </div>
-    <div class="lead-note" id="leadNote">Connecting…</div>
-  </div>
-</header>
+<div class="stick">
+  <header class="hero">
+    <button type="button" class="hero-bar" id="heroToggle" aria-expanded="false" aria-controls="heroPanel">
+      <span class="hb-side n"><i>Team 1</i><b id="ptsN">0</b></span>
+      <span class="hb-mid">
+        <span class="hb-lead" id="leadNote">Connecting…</span>
+        <span class="hb-of"><b id="ptsAwarded">0</b> of 26 awarded &middot; <span id="statusNote">Live</span></span>
+      </span>
+      <span class="hb-side g"><i>Team 2</i><b id="ptsG">0</b></span>
+      <span class="hb-chev" aria-hidden="true"></span>
+    </button>
+    <div class="ticker" id="tickerWrap"><div class="ticker-run" id="tickerRun"></div></div>
+  </header>
 
-<nav class="tabs">
-  <div class="tabs-in" role="tablist" aria-label="Sections">
-    <button class="tab" role="tab" id="tab-board" aria-controls="p-board" aria-selected="true">Leaderboard</button>
-    <button class="tab" role="tab" id="tab-tee" aria-controls="p-tee" aria-selected="false">Tee Times &amp; Scorecard<span class="flag" id="teeFlag" hidden></span></button>
-    <button class="tab" role="tab" id="tab-teams" aria-controls="p-teams" aria-selected="false">Teams<span class="flag" id="teamFlag" hidden></span></button>
-  </div>
-</nav>
+  <nav class="tabs">
+    <div class="tabs-in" role="tablist" aria-label="Sections">
+      <button class="tab" role="tab" id="tab-tee" aria-controls="p-tee" aria-selected="true">Tee Times and Scoring<span class="flag" id="teeFlag" hidden></span></button>
+      <button class="tab" role="tab" id="tab-teams" aria-controls="p-teams" aria-selected="false">Teams<span class="flag" id="teamFlag" hidden></span></button>
+    </div>
+  </nav>
 
-<main>
-  <div class="panel" id="p-board" role="tabpanel" aria-labelledby="tab-board">
+  <div class="hero-panel" id="heroPanel" hidden>
     <div class="card">
       <div class="card-h"><h2>Individual board</h2></div>
       <div class="card-b flush"><div class="scroller"><table class="ind" id="indBoard"></table></div></div>
@@ -506,7 +538,9 @@ footer{max-width:1100px; margin:0 auto; padding:4px 16px 40px; font-size:11.5px;
       <div class="card-b flush"><table class="ledger" id="ledger"></table></div>
     </div>
   </div>
+</div>
 
+<main>
   <div class="panel" id="p-tee" role="tabpanel" aria-labelledby="tab-tee" hidden>
     <div class="banner" id="roBanner" hidden>
       <b>View only on this device.</b> The card still updates live for you, but posting scores needs edit access &mdash; ask Josh to share the page as an editor.
@@ -1175,8 +1209,58 @@ function refreshHeader(){
     note.appendChild(document.createTextNode(c.allDone?" · final":" · "+fmt(rem)+" point"+(rem===1?"":"s")+" still on the board"));
   }
   byId("statusNote").textContent=c.allDone?"Final":"Live";
+  renderTicker(c);
   byId("setupBanner").hidden=assignedCount(state.slots)===NSLOT;
   return c;
+}
+
+/* ---------- the leaderboard drawer ---------- */
+var HKEY="ssg-hero-v1";
+var heroOpen=(function(){
+  try{ return localStorage.getItem(HKEY)==="1"; }catch(e){ return false; }
+})();
+function applyHero(){
+  byId("heroPanel").hidden=!heroOpen;
+  byId("heroToggle").setAttribute("aria-expanded",heroOpen?"true":"false");
+  if(heroOpen) renderBoard(compute());
+}
+function setHero(open){
+  heroOpen=open;
+  try{ localStorage.setItem(HKEY,open?"1":"0"); }catch(e){}
+  applyHero();
+}
+
+/* A single pass of the standings, duplicated so the marquee can loop seamlessly. */
+function renderTicker(c){
+  var run=byId("tickerRun");
+  var rows=P.map(function(p){ return {p:p,t:c.tallies[p.id]}; })
+    .filter(function(r){ return r.t.played>0; })
+    .sort(function(a,b){ return a.t.toPar-b.t.toPar||b.t.played-a.t.played; });
+  run.textContent="";
+  if(!rows.length){
+    run.appendChild(el("span","tk","No scores posted yet \u2014 tap a hole on the scorecard to start."));
+    return;
+  }
+  var pos=[], i=0;
+  while(i<rows.length){
+    var j=i;
+    while(j+1<rows.length&&rows[j+1].t.toPar===rows[i].t.toPar) j++;
+    var lab=(j>i?"T":"")+(i+1);
+    for(var k=i;k<=j;k++) pos[k]=lab;
+    i=j+1;
+  }
+  function pass(){
+    rows.forEach(function(r,ix){
+      var sp=el("span","tk");
+      sp.appendChild(document.createTextNode(pos[ix]));
+      sp.appendChild(el("b",null,shortName(r.p.name)));
+      var v=r.t.toPar;
+      sp.appendChild(el("span","s "+(v<0?"under":(v===0?"level":"over")),toPar(v)));
+      sp.appendChild(document.createTextNode(" \u00b7 thru "+r.t.last));
+      run.appendChild(sp);
+    });
+  }
+  pass(); pass();
 }
 
 function renderTeeGrid(){
@@ -1909,6 +1993,7 @@ function render(){
   renderTeeGrid();
   refreshSaveBar();
   renderDraw();
+  applyHero();
   if(sheetOpen) renderHole(true);
   renderRoster();
   renderTeams();
@@ -2004,14 +2089,14 @@ function resyncDrafts(){
 }
 
 /* ---------- wiring ---------- */
-var TABS=["board","tee","teams"];
+byId("heroToggle").addEventListener("click",function(){ setHero(!heroOpen); });
+var TABS=["tee","teams"];
 function showTab(k){
   TABS.forEach(function(j){
     var on=j===k;
     byId("tab-"+j).setAttribute("aria-selected",on?"true":"false");
     byId("p-"+j).hidden=!on;
   });
-  if(k==="board") renderBoard(compute());
 }
 TABS.forEach(function(k){ byId("tab-"+k).addEventListener("click",function(){ showTab(k); }); });
 

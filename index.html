@@ -385,36 +385,7 @@ table{border-collapse:collapse; width:100%}
 .dnames .vs{color:var(--ink-3); font-weight:400; margin:0 5px}
 
 /* ---------- balance readout, shared by both setup tabs ---------- */
-.bal{display:grid; grid-template-columns:1fr auto 1fr; gap:10px; align-items:center}
-
 /* four teams need four totals, not a left-and-right pair */
-.balfour{display:grid; grid-template-columns:repeat(4,1fr); gap:7px}
-.bf{
-  display:grid; gap:1px; justify-items:center; text-align:center;
-  padding:7px 3px; border:1px solid var(--line); border-radius:6px; min-width:0;
-}
-.bf .lab{font-size:8.5px; letter-spacing:.08em; text-transform:uppercase; font-weight:700; white-space:nowrap}
-.bf.n .lab{color:var(--t1)}
-.bf.g .lab{color:var(--t2)}
-.bf.c .lab{color:var(--t3)}
-.bf.d .lab{color:var(--t4)}
-.bf .fig{font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:19px; font-weight:700; line-height:1.1}
-.bf .sub{font-size:9.5px; color:var(--ink-3); font-family:var(--mono)}
-.bf.short{border-color:var(--red)}
-.bfspread{
-  grid-column:1/-1; text-align:center; padding-top:2px;
-  font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3);
-}
-.bfspread b{font-family:var(--mono); color:var(--ink-2); letter-spacing:0}
-.bal .col{display:grid; gap:2px}
-.bal .col.r{justify-items:end; text-align:right}
-.bal .lab{font-size:10px; letter-spacing:.14em; text-transform:uppercase; font-weight:700}
-.bal .col.n .lab{color:var(--t1)}
-.bal .col.g .lab{color:var(--t2)}
-.bal .fig{font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:21px; font-weight:600; line-height:1.1}
-.bal .sub{font-size:11.5px; color:var(--ink-3); font-family:var(--mono)}
-.bal .mid{font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); text-align:center; line-height:1.4}
-.bal .mid b{display:block; font-family:var(--mono); font-size:15px; letter-spacing:0; color:var(--ink)}
 
 /* ---------- teams tab: drag and drop ---------- */
 .dnd{display:grid; gap:10px; padding:14px}
@@ -637,14 +608,6 @@ footer{max-width:1100px; margin:0 auto; padding:4px 16px 40px; font-size:11.5px;
           <button type="button" id="mode2" aria-pressed="true">Two</button>
           <button type="button" id="mode4" aria-pressed="false">Four</button>
         </div>
-      </div>
-      <div class="card-b">
-        <div class="bal" id="balTwo">
-          <div class="col n"><span class="lab" id="balLabN">Team 1</span><span class="fig" id="balN">0</span><span class="sub" id="balNs">0 players</span></div>
-          <div class="mid"><span>spread</span><b id="balGap">0</b><span>strokes</span></div>
-          <div class="col g r"><span class="lab" id="balLabG">Team 2</span><span class="fig" id="balG">0</span><span class="sub" id="balGs">0 players</span></div>
-        </div>
-        <div class="balfour" id="balFour" hidden></div>
       </div>
       <div class="dnd">
         <div class="zone pool" data-zone="pool">
@@ -1574,38 +1537,10 @@ function renderTeams(){
   }
   var pool=P.filter(function(p){ return !teamDraft[p.id]; });
 
-  /* Balance readout: two sides face off left and right; four each get a tile
-     showing that team's total handicap. */
+  /* Each zone header carries its own handicap total, so there is no separate
+     balance readout; the spread is still needed for the tag line below. */
   var totals=order.map(function(t){ return sums(t,"hcp"); });
   var spread=Math.max.apply(null,totals)-Math.min.apply(null,totals);
-  var two=order.length===2;
-  byId("balTwo").hidden=!two;
-  byId("balFour").hidden=two;
-  if(two){
-    byId("balN").textContent=String(totals[0]);
-    byId("balG").textContent=String(totals[1]);
-    byId("balNs").textContent=sideCount(teamDraft,order[0])+" players";
-    byId("balGs").textContent=sideCount(teamDraft,order[1])+" players";
-    byId("balGap").textContent=String(spread);
-    byId("balLabN").textContent=TEAM[order[0]];
-    byId("balLabG").textContent=TEAM[order[1]];
-  }else{
-    var bf=byId("balFour");
-    bf.textContent="";
-    order.forEach(function(t,i){
-      var cnt=sideCount(teamDraft,t);
-      var tile=el("div","bf "+t+(cnt===want?"":" short"));
-      tile.appendChild(el("span","lab",TEAM[t]));
-      tile.appendChild(el("span","fig",String(totals[i])));
-      tile.appendChild(el("span","sub",cnt+"/"+want));
-      bf.appendChild(tile);
-    });
-    var sp=el("div","bfspread");
-    sp.appendChild(document.createTextNode("spread "));
-    sp.appendChild(el("b",null,String(spread)));
-    sp.appendChild(document.createTextNode(" strokes"));
-    bf.appendChild(sp);
-  }
 
   var tt=byId("teamTag");
   tt.textContent=order.map(function(t){ return sideCount(teamDraft,t); }).join(" v ");

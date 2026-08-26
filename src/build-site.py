@@ -26,6 +26,16 @@ def sub(a, b, label, count=1):
     assert s.count(a) >= 1, "MISSING: " + label
     s = s.replace(a, b, count)
 
+
+# PANEL GUARD: the tab marked aria-selected must have a panel that is NOT hidden,
+# or the page opens blank (this shipped once).
+import re as _re
+_sel = _re.search(r'id="tab-([a-z]+)"[^>]*aria-selected="true"', s)
+assert _sel, "no tab is marked selected"
+_pid = 'id="p-%s"' % _sel.group(1)
+_panel = _re.search(r'<div class="panel" ' + _re.escape(_pid) + r'[^>]*>', s)
+assert _panel and 'hidden' not in _panel.group(0),     "the selected tab's panel (%s) must not be hidden" % _pid
+
 # ---------------------------------------------------------------- head/meta
 sub('<title>Sixteen Man Shootout</title>',
     '<title>Sixteen Man Shootout</title>\n'
@@ -125,9 +135,8 @@ sub(s[old_pub_start:old_pub_end], '''/* ---------- live sync ---------- */
 var FB=null, online=false, everSynced=false;
 
 function setConn(state2){
-  var el2=byId("statusNote");
-  if(!el2) return;
-  el2.textContent=state2;
+  /* "Live" is the quiet state: the badge shows nothing when connected. */
+  setStatus(state2==="Live"?"":state2);
 }
 
 function commit(patch,msgId){

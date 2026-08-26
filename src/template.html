@@ -66,22 +66,35 @@ p{margin:0}
 /* The tab bar is the only sticky chrome now; the leaderboard lives in a popup. */
 .stick{position:sticky; top:0; z-index:40; background:var(--card); box-shadow:0 3px 12px var(--shadow)}
 .tabs{
-  display:flex; align-items:stretch; gap:8px; max-width:1100px; margin:0 auto;
-  background:var(--card); border-bottom:1px solid var(--line); padding-right:12px;
+  background:var(--card); border-bottom:1px solid var(--line);
+  overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;
 }
-.tabs-in{flex:1 1 auto; min-width:0; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none}
-.tabs-in::-webkit-scrollbar{display:none}
-.tabs-right{flex:0 0 auto; display:flex; align-items:center; gap:9px}
-.conn{
-  font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; font-weight:700;
-  color:var(--ink-3); white-space:nowrap;
+.tabs::-webkit-scrollbar{display:none}
+.tabs-in{display:flex; max-width:1100px; margin:0 auto; padding:0 6px}
+
+/* Its own row under the tabs. Full width plus a chevron so it reads as
+   something that opens rather than as a label. */
+.lbrow{
+  display:flex; align-items:center; gap:9px; max-width:1100px; margin:0 auto;
+  padding:8px 12px; border-bottom:1px solid var(--line);
 }
 .lbbtn{
+  flex:1 1 auto; display:flex; align-items:center; justify-content:center; gap:9px;
   border:1px solid var(--brand); background:var(--brand); color:var(--btn-ink);
-  border-radius:6px; padding:8px 13px; font-family:inherit; font-size:12px; font-weight:700;
-  letter-spacing:.06em; text-transform:uppercase; white-space:nowrap; min-height:36px;
+  border-radius:6px; padding:9px 14px; font-family:inherit; font-size:12.5px; font-weight:700;
+  letter-spacing:.08em; text-transform:uppercase; min-height:40px;
 }
-@media (max-width:400px){.lbbtn{padding:8px 10px; font-size:11px}}
+.lbchev{
+  width:9px; height:9px; flex:0 0 auto; margin-top:-4px;
+  border-right:2px solid currentColor; border-bottom:2px solid currentColor;
+  transform:rotate(45deg);
+}
+.conn{
+  flex:0 0 auto; font-size:10px; letter-spacing:.12em; text-transform:uppercase;
+  font-weight:700; color:var(--ink-3); white-space:nowrap;
+}
+.conn:empty{display:none}
+.conn.off{color:var(--red)}
 .tabs::-webkit-scrollbar{display:none}
 .tabs-in{display:flex; max-width:1100px; margin:0 auto; padding:0 6px}
 .tab{background:none; border:0; padding:15px 15px 13px; white-space:nowrap; font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); border-bottom:2px solid transparent}
@@ -490,15 +503,18 @@ footer{max-width:1100px; margin:0 auto; padding:4px 16px 40px; font-size:11.5px;
       <button class="tab" role="tab" id="tab-tee" aria-controls="p-tee" aria-selected="true">Tee Times and Scoring<span class="flag" id="teeFlag" hidden></span></button>
       <button class="tab" role="tab" id="tab-teams" aria-controls="p-teams" aria-selected="false">Teams<span class="flag" id="teamFlag" hidden></span></button>
     </div>
-    <div class="tabs-right">
-      <span class="conn" id="statusNote">Live</span>
-      <button type="button" class="lbbtn" id="lbOpen">Leaderboard</button>
-    </div>
   </nav>
+  <div class="lbrow">
+    <button type="button" class="lbbtn" id="lbOpen" aria-haspopup="dialog" aria-expanded="false">
+      <span>Leaderboard</span>
+      <i class="lbchev" aria-hidden="true"></i>
+    </button>
+    <span class="conn" id="statusNote"></span>
+  </div>
 </div>
 
 <main>
-  <div class="panel" id="p-tee" role="tabpanel" aria-labelledby="tab-tee" hidden>
+  <div class="panel" id="p-tee" role="tabpanel" aria-labelledby="tab-tee">
     <div class="banner" id="roBanner" hidden>
       <b>View only on this device.</b> The card still updates live for you, but posting scores needs edit access &mdash; ask Josh to share the page as an editor.
     </div>
@@ -1009,6 +1025,13 @@ function shortName(name){
   return b[0]+" "+b[b.length-1].charAt(0)+".";
 }
 function byId(x){ return document.getElementById(x); }
+/* The badge is silent when all is well: it only speaks up for Offline or Final. */
+function setStatus(t){
+  var e=byId("statusNote");
+  if(!e) return;
+  e.textContent=t||"";
+  e.className="conn"+(t==="Offline"?" off":"");
+}
 
 var api=null, readOnly=false, saving=false;
 var PKEY="ssg-pending-v4", TKEY="ssg-tries-v4", GKEY="ssg-group-v1";
@@ -1187,7 +1210,7 @@ function refreshHeader(){
     note.appendChild(el("strong",null,d===0?"All square":(teamName(d>0?"n":"g")+" by "+fmt(Math.abs(d)))));
     note.appendChild(document.createTextNode(c.allDone?" · final":" · "+fmt(rem)+" point"+(rem===1?"":"s")+" still on the board"));
   }
-  byId("statusNote").textContent=c.allDone?"Final":"Live";
+  setStatus(c.allDone?"Final":"");
   byId("setupBanner").hidden=assignedCount(state.slots)===NSLOT;
   return c;
 }
@@ -1198,6 +1221,7 @@ function openLb(){
   lbReturn=document.activeElement;
   lbOpenState=true;
   byId("lbSheet").hidden=false;
+  byId("lbOpen").setAttribute("aria-expanded","true");
   document.body.style.overflow="hidden";
   renderBoard(compute());
   byId("lbPanel").focus();
@@ -1206,8 +1230,11 @@ function closeLb(){
   if(!lbOpenState) return;
   lbOpenState=false;
   byId("lbSheet").hidden=true;
+  byId("lbOpen").setAttribute("aria-expanded","false");
   if(!sheetOpen) document.body.style.overflow="";
-  if(lbReturn&&lbReturn.focus) lbReturn.focus();
+  /* fall back to the button, so focus never strands on the hidden panel */
+  var back=(lbReturn&&lbReturn.focus&&lbReturn!==document.body)?lbReturn:byId("lbOpen");
+  if(back&&back.focus) back.focus();
   lbReturn=null;
 }
 
@@ -2246,12 +2273,16 @@ byId("saveSlotsBtn").addEventListener("click",function(){
 });
 
 render();
+/* Always select a tab explicitly. Relying on the markup's initial state let both
+   panels sit hidden once the default tab changed, showing a blank page. */
 if(!evenSides(state.teams)){
   showTab("teams");
-}else if(assignedCount(state.slots)<NSLOT){
-  teeSetupOpen=true;
+}else{
   showTab("tee");
-  renderTeeSetup();
+  if(assignedCount(state.slots)<NSLOT){
+    teeSetupOpen=true;
+    renderTeeSetup();
+  }
 }
 
 if(typeof claude!=="undefined"&&claude&&typeof claude.use==="function"){

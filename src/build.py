@@ -16,6 +16,16 @@ def check(cond, label):
     if not cond:
         sys.exit(1)
 
+
+# PANEL GUARD: the tab marked aria-selected must have a panel that is NOT hidden,
+# or the page opens blank (this shipped once).
+import re as _re
+_sel = _re.search(r'id="tab-([a-z]+)"[^>]*aria-selected="true"', tpl)
+assert _sel, "no tab is marked selected"
+_pid = 'id="p-%s"' % _sel.group(1)
+_panel = _re.search(r'<div class="panel" ' + _re.escape(_pid) + r'[^>]*>', tpl)
+assert _panel and 'hidden' not in _panel.group(0),     "the selected tab's panel (%s) must not be hidden" % _pid
+
 print("template checks")
 check(tpl.count(M_STATE) == 1, "one literal STATE marker (found %d)" % tpl.count(M_STATE))
 check(tpl.count(M_SRC) == 1, "one literal SRC marker (found %d)" % tpl.count(M_SRC))

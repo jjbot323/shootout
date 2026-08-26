@@ -92,6 +92,17 @@ main{max-width:1100px; margin:0 auto; padding:16px 16px 20px; display:grid; gap:
 .card-h{display:flex; align-items:center; justify-content:space-between; gap:10px;
   padding:11px 14px; border-bottom:2px solid var(--rule); background:var(--card-2)}
 .card-h h2{font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; font-weight:700; color:var(--brand)}
+/* a card header that opens the card */
+.ctog{
+  display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%;
+  padding:11px 14px; border:0; border-bottom:2px solid var(--rule);
+  background:var(--card-2); color:var(--brand); font:inherit; text-align:left;
+  cursor:pointer; -webkit-appearance:none; appearance:none;
+}
+.ctog .lbchev{transform:rotate(45deg); transition:transform .15s ease}
+.ctog[aria-expanded="true"] .lbchev{transform:rotate(-135deg); margin-top:2px}
+.ctog:focus-visible{outline:2px solid var(--brand); outline-offset:-2px}
+@media (prefers-reduced-motion:reduce){.ctog .lbchev{transition:none}}
 .card-b{padding:14px}
 .card-b.flush{padding:0}
 .tag{font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); font-family:var(--mono)}
@@ -624,18 +635,7 @@ footer{max-width:1100px; margin:0 auto; padding:4px 16px 40px; font-size:11.5px;
       <b>Scores are already posted.</b> Moving players recalculates every match and point from the same scorecards.
     </div>
     <div class="card">
-      <div class="card-h rhead"><span>Player</span><span>Handicap</span></div>
-      <div class="card-b flush"><div class="rlist" id="rosterList"></div></div>
-      <div class="savebar static">
-        <span class="cnt" id="rosterMsg"></span>
-        <button class="btn ghost sm" id="revertRosterBtn">Revert</button>
-        <button class="btn sm" id="saveRosterBtn">Save players</button>
-      </div>
-      <div class="msg" id="rosterHint">Type over any name or handicap. Above 18 gives a second stroke on the lowest-index holes.</div>
-    </div>
-
-    <div class="card">
-      <div class="card-h"><h2 id="sidesTitle">The two sides</h2><span class="tag" id="teamTag"></span></div>
+      <div class="card-h"><span class="tag" id="teamTag"></span></div>
       <div class="modesw">
         <span>Teams</span>
         <div class="modeseg" role="group" aria-label="Number of teams">
@@ -661,6 +661,24 @@ footer{max-width:1100px; margin:0 auto; padding:4px 16px 40px; font-size:11.5px;
         <button class="btn sm" id="saveTeamsBtn">Save teams</button>
       </div>
       <div class="msg" id="balMsg">Auto-balance snake-drafts by handicap, then trades single players until the two sides sit as close as they can.</div>
+    </div>
+
+    <div class="card">
+      <button type="button" class="card-h ctog" id="rosterToggle"
+              aria-expanded="false" aria-controls="rosterBox">
+        <h2>Players and handicaps</h2>
+        <i class="lbchev" aria-hidden="true"></i>
+      </button>
+      <div id="rosterBox" hidden>
+        <div class="card-h rhead"><span>Player</span><span>Handicap</span></div>
+        <div class="card-b flush"><div class="rlist" id="rosterList"></div></div>
+        <div class="savebar static">
+          <span class="cnt" id="rosterMsg"></span>
+          <button class="btn ghost sm" id="revertRosterBtn">Revert</button>
+          <button class="btn sm" id="saveRosterBtn">Save players</button>
+        </div>
+        <div class="msg" id="rosterHint">Type over any name or handicap. Above 18 gives a second stroke on the lowest-index holes.</div>
+      </div>
     </div>
   </div>
 </main>
@@ -1748,7 +1766,6 @@ function renderTeams(){
   byId("mode4").setAttribute("aria-pressed",state.mode===4?"true":"false");
   byId("mode2").disabled=!editable;
   byId("mode4").disabled=!editable;
-  byId("sidesTitle").textContent=state.mode===4?"The four teams":"The two sides";
 
   function sums(t,key){
     return P.reduce(function(acc,p){ return teamDraft[p.id]===t?acc+p[key]:acc; },0);
@@ -2552,6 +2569,13 @@ byId("lockBtn").addEventListener("click",function(){
   if(state.locked) resyncDrafts();
   render();
   commit({locked:state.locked},"teamMsg");
+});
+
+byId("rosterToggle").addEventListener("click",function(){
+  var box=byId("rosterBox"), open=box.hidden;
+  box.hidden=!open;
+  byId("rosterToggle").setAttribute("aria-expanded",open?"true":"false");
+  if(open) box.scrollIntoView({block:"nearest"});
 });
 
 byId("gatePanel").tabIndex=-1;
